@@ -15,10 +15,10 @@
 
 ## 🖼️ Screenshots
 **Inventory list (Products overview)**  
-![Inventory overview](/screenshots/stock-pilot.png) 
+![Inventory overview](public/screenshots/stock-pilot.png) 
 
 **Add Item modal (create new inventory item)**  
-![Add Item modal](/screenshots/stock-pilot1.png)
+![Add Item modal](public/screenshots/stock-pilot1.png)
 
 ---
 
