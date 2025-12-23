@@ -1,369 +1,189 @@
-# 📦 StockPilot
+# StockPilot
 
-[![Status](https://img.shields.io/badge/status-in_development-orange)]()
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+An inventory management system for small to medium businesses. Built with Next.js, Express, and MongoDB.
 
-> **Intelligent Inventory Management System** with predictive analytics and automated reordering
+## What It Does
 
-A comprehensive inventory management platform for small to medium businesses featuring real-time stock tracking, predictive analytics, and automated supply chain management.
+StockPilot helps businesses track their inventory with:
 
----
+- **Inventory Management** - Add, edit, delete products with categories and stock levels
+- **Low Stock Alerts** - Automatic detection when items fall below their threshold
+- **Stock Movement Tracking** - Full history of stock in/out with reasons
+- **Dashboard Analytics** - Real-time metrics showing inventory health
+- **Basic Forecasting** - Moving average predictions based on usage patterns
+- **CSV Export** - Export inventory data for reporting
 
-## 🎯 The Problem
+## Tech Stack
 
-Businesses face inventory challenges:
-- 📉 **Stockouts**: Lost sales due to out-of-stock items (avg. 8% revenue loss)
-- 💰 **Overstocking**: Capital tied up in excess inventory
-- 📊 **Manual Tracking**: Spreadsheet chaos and human errors
-- 🔮 **No Forecasting**: Unable to predict demand patterns
+**Frontend**
+- Next.js 15 (App Router)
+- TypeScript
+- Tailwind CSS + shadcn/ui
+- Recharts for data visualization
+- React Hook Form + Zod validation
 
-**StockPilot** provides AI-powered inventory optimization with real-time insights.
+**Backend**
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT authentication
 
----
-
-## ✨ Key Features
-
-### Core Functionality
-- 📊 **Real-time Inventory Tracking**: Live stock levels across multiple locations
-- 🔔 **Low Stock Alerts**: Automated notifications when items reach reorder point
-- 📈 **Demand Forecasting**: ML-based prediction of future inventory needs
-- 🤖 **Auto-reordering**: Automatic purchase orders based on historical data
-- 📦 **Multi-warehouse Support**: Manage inventory across multiple locations
-- 🏷️ **Barcode/QR Scanning**: Quick item lookup and stock updates
-- 📱 **Mobile App Ready**: Responsive design for on-the-go management
-
-### Analytics & Reporting
-- 📊 **Dashboard**: Real-time KPIs (stock value, turnover ratio, dead stock)
-- 📈 **Trend Analysis**: Sales patterns, seasonal variations
-- 💹 **Profitability Reports**: Product-wise margin analysis
-- 📉 **ABC Analysis**: Classify items by revenue contribution
-- 📅 **Historical Data**: Year-over-year comparisons
-
-### Integration Features
-- 🛒 **E-commerce Sync**: Auto-update inventory from Shopify/WooCommerce
-- 📧 **Supplier Management**: Track vendor info, lead times, pricing
-- 💳 **Invoice Generation**: Create purchase and sales invoices
-- 📤 **Export Options**: CSV, Excel, PDF reports
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Charts**: Recharts / Chart.js
-- **State Management**: Zustand
-- **Forms**: React Hook Form + Zod validation
-- **Tables**: TanStack Table (sorting, filtering, pagination)
-
-### Backend (Planned)
-- **API**: Next.js API Routes
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Auth**: NextAuth.js (role-based access)
-- **File Storage**: AWS S3 (for receipts, invoices)
-- **Queue**: Bull (background jobs for forecasting)
-- **Cache**: Redis (fast stock lookups)
-
-### AI/ML (Planned)
-- **Forecasting**: Python microservice with scikit-learn
-- **Model**: ARIMA / Prophet for time-series prediction
-- **API**: FastAPI endpoint for demand predictions
-
-### DevOps
-- **Hosting**: Vercel (Frontend), Railway (Backend)
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Sentry + Vercel Analytics
-
----
-
-## 📐 System Architecture
-```
-┌────────────────────────────────────────────────────────────┐
-│                     Next.js Frontend                        │
-│  (Dashboard, Inventory, Reports, Settings)                  │
-└───────────────────────┬────────────────────────────────────┘
-                        │
-        ┌───────────────┼───────────────┐
-        │               │               │
-   ┌────▼────┐    ┌────▼────┐    ┌────▼────┐
-   │  Auth   │    │   API   │    │ Storage │
-   │ Service │    │ Routes  │    │   S3    │
-   └────┬────┘    └────┬────┘    └─────────┘
-        │               │
-        └───────┬───────┘
-                │
-    ┌───────────┴───────────┐
-    │                       │
-┌───▼────┐           ┌─────▼──────┐
-│PostgreSQL│          │   Redis    │
-│(Primary) │          │  (Cache)   │
-└──────────┘          └────────────┘
-                             │
-                      ┌──────▼──────┐
-                      │   Python    │
-                      │ ML Service  │
-                      │  (FastAPI)  │
-                      └─────────────┘
-```
-
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
-- npm or yarn
+- MongoDB (local or Atlas)
 
 ### Installation
+
 ```bash
-# Clone repository
+# Clone the repo
 git clone https://github.com/unnita1235/StockPilot.git
 cd StockPilot
 
-# Install dependencies
-npm install
+# Install all dependencies (frontend + backend)
+npm run install:all
 
-# Setup environment
-cp .env.example .env.local
+# Copy environment variables
+cp .env.example .env
 
-# Run development server
+# Seed the database with sample data
+npm run seed
+
+# Run both frontend and backend
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Frontend runs on [http://localhost:9002](http://localhost:9002)
+Backend API runs on [http://localhost:3001](http://localhost:3001)
 
----
+### Running Separately
 
-## 📁 Project Structure
+```bash
+# Frontend only
+npm run dev:frontend
+
+# Backend only
+npm run dev:server
+```
+
+## Project Structure
+
 ```
 StockPilot/
-├── src/
-│   ├── app/
-│   │   ├── dashboard/           # Main dashboard
-│   │   ├── inventory/           # Product management
-│   │   ├── reports/             # Analytics & reports
-│   │   ├── settings/            # User settings
-│   │   └── api/                 # API routes
-│   ├── components/
-│   │   ├── inventory/           # Product tables, forms
-│   │   ├── charts/              # Analytics visualizations
-│   │   ├── reports/             # Report components
-│   │   └── ui/                  # shadcn components
-│   ├── lib/
-│   │   ├── db/                  # Database utilities
-│   │   ├── ml/                  # ML model interfaces
-│   │   └── utils/               # Helper functions
-│   ├── store/                   # Zustand stores
-│   └── types/                   # TypeScript definitions
-└── ml-service/                  # Python ML service (planned)
-    ├── models/                  # Trained ML models
-    ├── api.py                   # FastAPI endpoints
-    └── train.py                 # Model training scripts
+├── src/                      # Frontend (Next.js)
+│   ├── app/                  # App router pages
+│   ├── components/           # React components
+│   │   ├── inventory/        # Business logic components
+│   │   └── ui/               # shadcn/ui components
+│   ├── hooks/                # Custom React hooks
+│   └── lib/                  # API client, types, utilities
+│
+├── server/                   # Backend (Express)
+│   ├── controllers/          # Route handlers
+│   ├── models/               # Mongoose schemas
+│   ├── routes/               # API routes
+│   ├── middleware/           # Auth, error handling
+│   ├── utils/                # Forecasting utilities
+│   └── scripts/              # Seed script
+│
+└── package.json              # Scripts for both
 ```
 
----
+## API Endpoints
 
-## 🎨 Current Implementation Status
+### Items
+- `GET /api/items` - List all items (supports `?category=`, `?search=`, `?lowStock=true`)
+- `GET /api/items/:id` - Get single item
+- `POST /api/items` - Create item
+- `PUT /api/items/:id` - Update item
+- `DELETE /api/items/:id` - Delete item
+- `GET /api/items/low-stock` - Get all low stock items
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Dashboard UI | ✅ Done | KPI cards, charts |
-| Product Listing | ✅ Done | Table with filters |
-| Add/Edit Products | 🚧 In Progress | Form validation |
-| Stock Adjustments | ✅ Done | Increase/decrease stock |
-| Low Stock Alerts | 📅 Planned | Email notifications |
-| Demand Forecasting | 📅 Planned | ML integration |
-| Barcode Scanning | 📅 Planned | Camera API |
-| Reports Generation | 📅 Planned | PDF export |
+### Stock Movements
+- `POST /api/stock/add` - Add stock (stock in)
+- `POST /api/stock/remove` - Remove stock (stock out)
+- `POST /api/stock/adjust` - Adjust to specific level
+- `PUT /api/stock/quick-update/:id` - Quick stock update
+- `GET /api/stock/movements/:itemId` - Get item's movement history
+- `GET /api/stock/movements/recent` - Get recent movements
 
----
+### Analytics
+- `GET /api/analytics/dashboard` - Dashboard summary stats
+- `GET /api/analytics/trends` - Stock movement trends
+- `GET /api/analytics/forecast/:itemId` - Item demand forecast
+- `GET /api/analytics/categories` - Category breakdown
+- `GET /api/analytics/top-movers` - Most active items
+- `GET /api/analytics/alerts` - Low stock and slow-moving alerts
 
-## 🔐 Environment Variables
+### Auth
+- `POST /api/auth/register` - Create account
+- `POST /api/auth/login` - Get JWT token
+- `GET /api/auth/me` - Get current user (requires auth)
+
+## Environment Variables
+
 ```bash
 # Database
-DATABASE_URL="postgresql://user:password@localhost:5432/stockpilot"
+MONGODB_URI=mongodb://localhost:27017/stockpilot
 
-# Authentication
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="http://localhost:3000"
+# Auth
+JWT_SECRET=your_secret_here
+JWT_EXPIRES_IN=7d
 
-# AWS S3 (for file uploads)
-AWS_ACCESS_KEY_ID="..."
-AWS_SECRET_ACCESS_KEY="..."
-AWS_REGION="us-east-1"
-AWS_S3_BUCKET="stockpilot-uploads"
+# Server
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:9002
 
-# ML Service
-ML_SERVICE_URL="http://localhost:8000"
-
-# Email (for alerts)
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT=587
-SMTP_USER="your-email@gmail.com"
-SMTP_PASS="your-app-password"
-
-# Redis
-REDIS_URL="redis://localhost:6379"
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
----
+## Features Explained
 
-## 🧪 Key Features Deep Dive
+### Forecasting
 
-### 1. Predictive Analytics
-```python
-# Demand forecasting algorithm
-- Historical sales data (12+ months)
-- Seasonal patterns detection
-- Trend analysis
-- Confidence intervals
-- Accuracy: 85%+ for stable products
+The forecasting system uses weighted moving averages and trend detection:
+
+1. **Daily Usage Calculation** - Weighted average of last 7-30 days of stock-out movements
+2. **Trend Detection** - Compares recent vs older usage to detect increasing/decreasing patterns
+3. **Days to Stockout** - Estimates when current stock will run out
+4. **Reorder Point Suggestion** - Calculates optimal low stock threshold based on lead time
+
+This is practical forecasting based on historical data, not machine learning.
+
+### Real-time Updates
+
+The frontend polls the backend every 10 seconds for inventory data and every 30 seconds for dashboard stats. This provides near-real-time updates without the complexity of WebSockets.
+
+### Offline Fallback
+
+If the backend is unavailable, the frontend falls back to sample data and shows an "Offline" indicator. Operations can still be performed locally.
+
+## Default Login
+
+After seeding, you can log in with:
+- Email: `admin@stockpilot.com`
+- Password: `admin123`
+
+## Development
+
+```bash
+# Type check frontend
+npm run typecheck
+
+# Lint frontend
+npm run lint
+
+# Seed fresh data
+npm run seed
 ```
 
-**Use Case**: Predict next month's demand for Product X
-- Input: 12 months of sales data
-- Output: Forecasted quantity ± confidence range
-- Action: Generate auto-reorder suggestion
+## License
 
-### 2. ABC Analysis
-```typescript
-// Classify inventory by revenue contribution
-Class A: Top 20% products → 80% revenue (tight control)
-Class B: Next 30% products → 15% revenue (moderate control)
-Class C: Bottom 50% products → 5% revenue (minimal control)
-```
+MIT
 
-### 3. Reorder Point Calculation
-```
-Reorder Point = (Daily Usage × Lead Time) + Safety Stock
+## Author
 
-Where:
-- Daily Usage = Average daily sales
-- Lead Time = Supplier delivery time (days)
-- Safety Stock = Buffer for demand variability
-```
-
-**Example**:
-- Product: Laptop Charger
-- Daily Sales: 5 units
-- Lead Time: 7 days
-- Safety Stock: 10 units
-- Reorder Point: (5 × 7) + 10 = 45 units
-
----
-
-## 📊 Database Schema (Planned)
-```sql
--- Core Tables
-products (id, sku, name, description, category_id, unit_price, current_stock, reorder_point)
-categories (id, name, description)
-warehouses (id, name, location, capacity)
-stock_movements (id, product_id, warehouse_id, quantity, type, timestamp)
-suppliers (id, name, contact, lead_time_days)
-purchase_orders (id, supplier_id, order_date, expected_date, status)
-sales_orders (id, order_date, total_amount, status)
-
--- Analytics Tables
-demand_forecast (id, product_id, forecast_date, predicted_quantity, confidence_level)
-stock_alerts (id, product_id, alert_type, triggered_at, resolved_at)
-```
-
----
-
-## 🎯 Roadmap
-
-### Phase 1 (Current - Month 1-2)
-- [x] Dashboard design
-- [x] Product CRUD UI
-- [x] Stock adjustment functionality
-- [ ] User authentication
-- [ ] Database integration
-
-### Phase 2 (Month 3-4)
-- [ ] Multi-warehouse support
-- [ ] Supplier management
-- [ ] Purchase order system
-- [ ] Low stock alerts
-
-### Phase 3 (Month 5-6)
-- [ ] Demand forecasting (ML)
-- [ ] Auto-reordering system
-- [ ] Advanced reports
-- [ ] Barcode scanning
-
-### Phase 4 (Month 7+)
-- [ ] Mobile app
-- [ ] E-commerce integration
-- [ ] API for third-party apps
-- [ ] Multi-currency support
-
----
-
-## 🏆 Technical Highlights
-
-1. **Real-time Updates**: WebSocket for live stock changes
-2. **Optimistic Locking**: Prevent concurrent stock update conflicts
-3. **Audit Trail**: Complete history of all inventory changes
-4. **Role-based Access**: Manager/Staff/Viewer permissions
-5. **Offline Mode**: PWA capabilities for warehouse use
-
----
-
-## 📚 Key Learnings & Challenges
-
-### Challenge 1: Concurrent Stock Updates
-**Problem**: Two users updating same product simultaneously
-**Solution**: Implemented optimistic locking with version numbers
-
-### Challenge 2: Demand Prediction Accuracy
-**Problem**: Volatile products (seasonal, trends) hard to predict
-**Solution**: Separate models for stable/volatile items + manual override
-
-### Challenge 3: Multi-warehouse Stock Distribution
-**Problem**: Optimal stock allocation across warehouses
-**Solution**: Algorithm considering sales velocity per location
-
----
-
-## 🤝 Contributing
-
-This is a learning project. Feedback welcome!
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-## 👤 Author
-
-**Unni T A**
-- GitHub: [@unnita1235](https://github.com/unnita1235)
-- Email: unnita1235@gmail.com
-
----
-
-## 🙏 Acknowledgments
-
-- Recharts for beautiful visualizations
-- TanStack Table for powerful data grids
-- shadcn/ui for excellent components
-
----
-
-## 📊 Project Stats
-
-- **Lines of Code**: ~4,000+
-- **Components**: 30+ reusable components
-- **Database Tables**: 15+ (planned)
-- **API Endpoints**: 20+ (planned)
-
----
-
-**Note**: Under active development. ML forecasting module in planning phase.
+Unni T A - [@unnita1235](https://github.com/unnita1235)

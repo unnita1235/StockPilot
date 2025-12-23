@@ -7,6 +7,9 @@ export type InventoryItem = {
   stock: number;
   category: InventoryCategory;
   lowStockThreshold: number;
+  sku?: string;
+  unitPrice?: number;
+  isLowStock?: boolean;
 };
 
 export const categories: InventoryCategory[] = ['Raw Material', 'Packaging Material', 'Product for Sale'];
