@@ -1,10 +1,23 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { env } from './env';
+
+const API_URL = env.apiUrl;
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
   token?: string;
 };
+
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code?: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, token } = options;
@@ -20,20 +33,46 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const config: RequestInit = {
     method,
     headers,
+    credentials: 'include', // Include cookies for CORS
   };
 
   if (body) {
     config.body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, config);
-  const data = await response.json();
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, config);
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+    // Handle non-JSON responses
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType?.includes('application/json');
+
+    const data = isJson ? await response.json() : await response.text();
+
+    if (!response.ok) {
+      const message = isJson && data.message ? data.message : 'Something went wrong';
+      const code = isJson && data.code ? data.code : undefined;
+      throw new ApiError(message, response.status, code);
+    }
+
+    return data;
+  } catch (error) {
+    // Network errors or other fetch failures
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    // Network error or API is down
+    if (error instanceof TypeError) {
+      throw new ApiError(
+        'Unable to connect to server. Please check your internet connection.',
+        0,
+        'NETWORK_ERROR'
+      );
+    }
+
+    throw new ApiError('An unexpected error occurred', 500);
   }
-
-  return data;
 }
 
 // Items API
@@ -157,6 +196,9 @@ export const authApi = {
   getMe: (token: string) =>
     request<{ success: boolean; data: User }>('/auth/me', { token }),
 };
+
+// Export ApiError for error handling
+export { ApiError };
 
 // Types
 export type InventoryCategory = 'Raw Material' | 'Packaging Material' | 'Product for Sale';

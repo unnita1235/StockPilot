@@ -1,6 +1,53 @@
 # StockPilot
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/unnita1235/StockPilot)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 An inventory management system for small to medium businesses. Built with Next.js, Express, and MongoDB.
+
+## 🚀 Live Demo
+
+> **Note**: Add your deployment URLs here after deploying
+
+- **Frontend**: `https://your-app.vercel.app` (Coming Soon)
+- **Backend API**: `https://your-backend.railway.app` (Coming Soon)
+- **Health Check**: `https://your-backend.railway.app/api/health` (Coming Soon)
+
+## 📊 Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    StockPilot Architecture                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────┐       ┌─────────────────────┐        │
+│  │   Next.js 15     │       │    Express API      │        │
+│  │   (Frontend)     │◄─────►│    (Backend)        │        │
+│  │                  │ REST  │                     │        │
+│  │ • TypeScript     │       │ • JWT Auth          │        │
+│  │ • Tailwind CSS   │       │ • Rate Limiting     │        │
+│  │ • shadcn/ui      │       │ • Security Headers  │        │
+│  │ • React Charts   │       │ • Error Handling    │        │
+│  └──────────────────┘       └──────────┬──────────┘        │
+│         │                              │                    │
+│         │                              │                    │
+│         ▼                              ▼                    │
+│  ┌──────────────────┐       ┌─────────────────────┐        │
+│  │   Vercel CDN     │       │   MongoDB Atlas     │        │
+│  │   (Hosting)      │       │   (Database)        │        │
+│  └──────────────────┘       └─────────────────────┘        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+Features:
+• Real-time inventory tracking with polling
+• Weighted moving average forecasting
+• Stock movement history & analytics
+• Low stock alerts & notifications
+• Category-based organization
+• CSV export capabilities
+```
 
 ## What It Does
 
@@ -66,6 +113,36 @@ npm run dev:frontend
 # Backend only
 npm run dev:server
 ```
+
+## 🌐 Deployment
+
+Ready to deploy to production? See our comprehensive **[DEPLOYMENT.md](./DEPLOYMENT.md)** guide for step-by-step instructions.
+
+### Quick Deploy
+
+**Backend (Railway)**:
+1. Create MongoDB Atlas cluster (free tier)
+2. Deploy to Railway from GitHub
+3. Set environment variables (see [DEPLOYMENT.md](./DEPLOYMENT.md))
+4. Get your backend URL
+
+**Frontend (Vercel)**:
+1. Import GitHub repository to Vercel
+2. Set `NEXT_PUBLIC_API_URL` to your Railway backend URL
+3. Deploy with one click
+4. Update Railway's `FRONTEND_URL` with your Vercel URL
+
+**Detailed Instructions**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete walkthrough with screenshots and troubleshooting.
+
+### Production Environment Variables
+
+See `.env.production.example` for all required production environment variables.
+
+Key variables:
+- `MONGODB_URI` - MongoDB Atlas connection string
+- `JWT_SECRET` - Strong random secret (use `openssl rand -base64 64`)
+- `FRONTEND_URL` - Your Vercel deployment URL(s)
+- `NEXT_PUBLIC_API_URL` - Your Railway backend API URL
 
 ## Project Structure
 
