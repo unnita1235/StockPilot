@@ -100,33 +100,64 @@ function forecastDemand(dailyUsageData, daysAhead = 30) {
   const forecast = [];
   for (let i = 0; i < daysAhead; i++) {
     const projected = avgUsage * (1 + trendMultiplier * i);
-    forecast.push(Math.max(0, Math.round(projected * 100) / 100));
+    forecast.push(Math.max(0, roundToTwoDecimals(projected)));
   }
 
   return forecast;
 }
 
+// Helper function to round numbers to two decimal places
+function roundToTwoDecimals(value) {
+  return Math.round(value * 100) / 100;
+}
+
+// Calculate total forecasted usage over a period
+function calculateTotalForecastedUsage(forecast) {
+  return forecast.reduce((sum, dailyUsage) => sum + dailyUsage, 0);
+}
+
+// Calculate projected stock level after forecasted usage
+function calculateProjectedStock(currentStock, forecast) {
+  const totalUsage = calculateTotalForecastedUsage(forecast);
+  const projectedStock = currentStock - totalUsage;
+  return Math.max(0, Math.round(projectedStock));
+}
+
+// Determine if threshold adjustment is recommended (>20% difference)
+function isThresholdAdjustmentNeeded(suggestedThreshold, currentThreshold) {
+  const difference = Math.abs(suggestedThreshold - currentThreshold);
+  const changePercentage = difference / currentThreshold;
+  return changePercentage > 0.2; // More than 20% difference
+}
+
+// Calculate average daily usage from historical data
+function calculateAverageDailyUsage(dailyUsageData) {
+  if (dailyUsageData.length === 0) {
+    return 0;
+  }
+  return roundToTwoDecimals(weightedMovingAverage(dailyUsageData));
+}
+
 // Analyze item and return insights
 function analyzeItem(currentStock, lowStockThreshold, dailyUsageData) {
-  const avgDailyUsage = dailyUsageData.length > 0
-    ? weightedMovingAverage(dailyUsageData)
-    : 0;
-
+  // Calculate metrics
+  const avgDailyUsage = calculateAverageDailyUsage(dailyUsageData);
   const trend = detectTrend(dailyUsageData);
   const daysToStockout = daysUntilStockout(currentStock, dailyUsageData);
   const suggestedThreshold = suggestReorderPoint(dailyUsageData);
-  const forecast = forecastDemand(dailyUsageData, 14);
+  const twoWeekForecast = forecastDemand(dailyUsageData, 14);
 
+  // Build analysis result
   return {
     currentStock,
-    avgDailyUsage: Math.round(avgDailyUsage * 100) / 100,
+    avgDailyUsage,
     trend,
     daysToStockout,
     suggestedThreshold,
     currentThreshold: lowStockThreshold,
-    shouldAdjustThreshold: Math.abs(suggestedThreshold - lowStockThreshold) > lowStockThreshold * 0.2,
-    twoWeekForecast: forecast,
-    projectedStockIn14Days: Math.max(0, Math.round(currentStock - forecast.reduce((a, b) => a + b, 0)))
+    shouldAdjustThreshold: isThresholdAdjustmentNeeded(suggestedThreshold, lowStockThreshold),
+    twoWeekForecast,
+    projectedStockIn14Days: calculateProjectedStock(currentStock, twoWeekForecast)
   };
 }
 
@@ -137,5 +168,11 @@ module.exports = {
   daysUntilStockout,
   suggestReorderPoint,
   forecastDemand,
-  analyzeItem
+  analyzeItem,
+  // Exported for testing and reuse
+  roundToTwoDecimals,
+  calculateTotalForecastedUsage,
+  calculateProjectedStock,
+  isThresholdAdjustmentNeeded,
+  calculateAverageDailyUsage
 };
