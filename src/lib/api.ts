@@ -13,8 +13,11 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     'Content-Type': 'application/json',
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  // Get token from localStorage if not provided
+  const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('stockpilot_token') : null);
+  
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
   }
 
   const config: RequestInit = {

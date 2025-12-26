@@ -1,7 +1,15 @@
+// Load environment variables first
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const helmet = require('helmet');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+const envConfig = require('./config/env');
+const logger = require('./config/logger');
 
 const itemRoutes = require('./routes/items');
 const stockRoutes = require('./routes/stock');
@@ -11,20 +19,32 @@ const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
-// Middleware
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+}));
+
+// CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:9002',
+  origin: envConfig.FRONTEND_URL,
   credentials: true
 }));
-app.use(express.json());
 
-// Request logging in development
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
-    next();
-  });
-}
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging
+app.use((req, res, next) => {
+  logger.http(`${req.method} ${req.path}`);
+  next();
+});
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'StockPilot API Documentation',
+}));
 
 // Routes
 app.use('/api/items', itemRoutes);
@@ -41,18 +61,16 @@ app.get('/api/health', (req, res) => {
 app.use(errorHandler);
 
 // Database connection and server start
-const PORT = process.env.PORT || 3001;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/stockpilot';
-
-mongoose.connect(MONGODB_URI)
+mongoose.connect(envConfig.MONGODB_URI)
   .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    logger.info('Connected to MongoDB');
+    app.listen(envConfig.PORT, () => {
+      logger.info(`Server running on port ${envConfig.PORT}`);
+      logger.info(`API documentation available at http://localhost:${envConfig.PORT}/api-docs`);
     });
   })
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
+    logger.error('MongoDB connection error:', err);
     process.exit(1);
   });
 

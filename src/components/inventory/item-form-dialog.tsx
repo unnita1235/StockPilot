@@ -36,7 +36,7 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   description: z.string().optional(),
   stock: z.coerce.number().int().nonnegative({ message: 'Stock must be a non-negative number.' }),
-  category: z.enum(categories, { required_error: 'Please select a category.' }),
+  category: z.enum(['Raw Material', 'Packaging Material', 'Product for Sale'], { required_error: 'Please select a category.' }),
   lowStockThreshold: z.coerce.number().int().nonnegative({ message: 'Threshold must be a non-negative number.' }),
 });
 
@@ -66,7 +66,14 @@ export function ItemFormDialog({
   });
 
   const onSubmit = (data: ItemFormData) => {
-    onSave({ ...data, id: item?.id });
+    onSave({ 
+      name: data.name,
+      description: data.description || '',
+      stock: data.stock,
+      category: data.category as InventoryCategory,
+      lowStockThreshold: data.lowStockThreshold,
+      id: item?.id 
+    });
   };
 
   return (

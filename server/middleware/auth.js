@@ -1,13 +1,14 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { AppError, asyncHandler } = require('./errorHandler');
+const envConfig = require('../config/env');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'stockpilot-dev-secret-change-in-production';
+const JWT_SECRET = envConfig.JWT_SECRET;
 
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+    expiresIn: envConfig.JWT_EXPIRES_IN
   });
 };
 

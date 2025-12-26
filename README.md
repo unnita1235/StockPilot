@@ -1,6 +1,33 @@
 # StockPilot
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+
 An inventory management system for small to medium businesses. Built with Next.js, Express, and MongoDB.
+
+> **Live Demo**: [View on Vercel](https://stock-pilot-wheat.vercel.app) (if deployed)
+
+## Features
+
+- ✅ **Full Authentication System** - Secure JWT-based login and registration
+- ✅ **Real-time Inventory Management** - Add, edit, delete, and track inventory items
+- ✅ **Smart Low Stock Alerts** - AI-powered analysis to optimize stock thresholds
+- ✅ **Stock Movement Tracking** - Complete audit trail of all stock changes
+- ✅ **Dashboard Analytics** - Real-time metrics and visualizations
+- ✅ **Demand Forecasting** - Predictive analytics based on historical data
+- ✅ **CSV Export** - Export inventory data for external analysis
+- ✅ **Responsive Design** - Works seamlessly on desktop and mobile devices
+- ✅ **Docker Support** - Easy deployment with containerization
+- ✅ **CI/CD Pipeline** - Automated testing and deployment
+
+## Screenshots
+
+![StockPilot Dashboard](public/screenshots/stock-pilot.png)
+
+*Inventory management dashboard with real-time metrics and analytics*
 
 ## What It Does
 
@@ -10,7 +37,7 @@ StockPilot helps businesses track their inventory with:
 - **Low Stock Alerts** - Automatic detection when items fall below their threshold
 - **Stock Movement Tracking** - Full history of stock in/out with reasons
 - **Dashboard Analytics** - Real-time metrics showing inventory health
-- **Basic Forecasting** - Moving average predictions based on usage patterns
+- **AI-Powered Forecasting** - Intelligent predictions using Google Genkit AI
 - **CSV Export** - Export inventory data for reporting
 
 ## Tech Stack
@@ -176,9 +203,83 @@ npm run typecheck
 # Lint frontend
 npm run lint
 
+# Run tests
+npm test
+cd server && npm test
+
 # Seed fresh data
 npm run seed
 ```
+
+## Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Or build individually
+docker build -t stockpilot-frontend .
+docker build -t stockpilot-backend ./server
+```
+
+## Testing
+
+This project includes comprehensive test coverage:
+
+- **Backend Tests**: Jest + Supertest for API endpoints
+- **Frontend Tests**: Jest + React Testing Library for components
+- **CI/CD**: Automated testing via GitHub Actions
+
+Run tests:
+```bash
+# Frontend tests
+npm test
+
+# Backend tests
+cd server && npm test
+```
+
+## What I Learned
+
+Building StockPilot was an incredible learning experience that helped me master:
+
+### Full-Stack Development
+- **Next.js 15 App Router**: Modern React framework with server components and routing
+- **TypeScript**: Type-safe development across frontend and backend
+- **Express.js**: Building RESTful APIs with proper middleware and error handling
+- **MongoDB + Mongoose**: Database design, schema modeling, and aggregation pipelines
+
+### Authentication & Security
+- **JWT Authentication**: Secure token-based authentication flow
+- **Password Hashing**: bcrypt for secure password storage
+- **Protected Routes**: Client and server-side route protection
+- **Role-Based Access Control**: Admin, manager, and staff roles
+
+### Modern UI/UX
+- **shadcn/ui**: Building accessible, customizable components
+- **Tailwind CSS**: Utility-first styling with responsive design
+- **React Hook Form + Zod**: Form validation and type safety
+- **Real-time Updates**: Polling strategies for live data
+
+### DevOps & Best Practices
+- **Docker**: Containerization for easy deployment
+- **CI/CD**: GitHub Actions for automated testing and deployment
+- **Testing**: Unit and integration tests with Jest
+- **Code Quality**: ESLint, TypeScript strict mode, and code organization
+
+### Advanced Features
+- **AI Integration**: Google Genkit for intelligent stock analysis
+- **Data Visualization**: Recharts for analytics dashboards
+- **Forecasting Algorithms**: Moving averages and trend detection
+- **Error Handling**: Comprehensive error boundaries and user feedback
+
+### Project Management
+- **Git Workflow**: Feature branches, commits, and pull requests
+- **Documentation**: Clear README, API docs, and contributing guidelines
+- **Environment Management**: Secure configuration with .env files
+- **Database Seeding**: Scripts for development and testing
+
+This project demonstrates production-ready code with proper architecture, testing, and deployment practices.
 
 ## License
 

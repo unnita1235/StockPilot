@@ -1,4 +1,6 @@
 // Centralized error handling middleware
+const logger = require('../config/logger');
+
 const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Internal Server Error';
@@ -34,10 +36,14 @@ const errorHandler = (err, req, res, next) => {
     message = 'Token expired';
   }
 
-  // Log error in development
-  if (process.env.NODE_ENV !== 'production') {
-    console.error('Error:', err);
-  }
+  // Log error
+  logger.error('Error:', {
+    message: err.message,
+    stack: err.stack,
+    statusCode: statusCode,
+    path: req.path,
+    method: req.method,
+  });
 
   res.status(statusCode).json({
     success: false,

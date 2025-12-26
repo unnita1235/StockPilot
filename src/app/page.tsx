@@ -10,6 +10,7 @@ import { DeleteItemDialog } from '@/components/inventory/delete-item-dialog';
 import { LowStockAnalyzerDialog } from '@/components/inventory/low-stock-analyzer-dialog';
 import { DashboardMetrics } from '@/components/inventory/dashboard-metrics';
 import { StockActivityChart } from '@/components/inventory/stock-activity-chart';
+import { ProtectedRoute } from '@/components/protected-route';
 import { useInventory } from '@/hooks/use-inventory';
 import { useDashboard } from '@/hooks/use-dashboard';
 import { useToast } from '@/hooks/use-toast';
@@ -172,7 +173,8 @@ export default function Home() {
   };
 
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       <div className="flex flex-col h-full">
         <header className="sticky top-0 z-10 flex h-[57px] items-center justify-between border-b bg-background px-4">
           <h1 className="text-xl font-semibold">Inventory</h1>
@@ -191,7 +193,7 @@ export default function Home() {
         <main className="flex-1 flex flex-col gap-4 p-4 md:gap-8 md:p-6">
           <DashboardMetrics stats={stats} loading={statsLoading} />
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4">
             <StockActivityChart data={trends} loading={statsLoading} />
           </div>
 
@@ -257,6 +259,7 @@ export default function Home() {
           onApply={(newThreshold) => handleUpdateThreshold(dialogState.item.id, newThreshold)}
         />
       )}
-    </DashboardLayout>
+      </DashboardLayout>
+    </ProtectedRoute>
   );
 }
