@@ -1,164 +1,297 @@
-# StockPilot
+# StockPilot - Inventory Management System
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+> A comprehensive inventory tracking and management system built with Next.js and TypeScript, featuring stock movement tracking, analytics, and forecasting.
 
-An inventory management system for small to medium businesses. Built with Next.js, Express, and MongoDB.
+**Status**: ✅ **Full-Stack Application** (Frontend + Backend Planning)  
+**Live Demo**: https://stock-pilot-wheat.vercel.app
 
-> **Live Demo**: [View on Vercel](https://stock-pilot-wheat.vercel.app) (if deployed)
+---
 
-## Features
+## 📸 What This Is
 
-- ✅ **Full Authentication System** - Secure JWT-based login and registration
-- ✅ **Real-time Inventory Management** - Add, edit, delete, and track inventory items
-- ✅ **Smart Low Stock Alerts** - AI-powered analysis to optimize stock thresholds
-- ✅ **Stock Movement Tracking** - Complete audit trail of all stock changes
-- ✅ **Dashboard Analytics** - Real-time metrics and visualizations
-- ✅ **Demand Forecasting** - Predictive analytics based on historical data
-- ✅ **CSV Export** - Export inventory data for external analysis
-- ✅ **Responsive Design** - Works seamlessly on desktop and mobile devices
-- ✅ **Docker Support** - Easy deployment with containerization
-- ✅ **CI/CD Pipeline** - Automated testing and deployment
+StockPilot is an **inventory management system** designed for small to medium businesses. It provides tools for tracking stock levels, monitoring movements, and analyzing inventory trends.
 
-## Screenshots
+**Current Status**: The frontend application is fully deployed with demo data. Backend API integration is planned for production deployment.
 
-![StockPilot Dashboard](public/screenshots/stock-pilot.png)
+---
 
-*Inventory management dashboard with real-time metrics and analytics*
+## ✨ Features
 
-## What It Does
+### What's Implemented ✅
 
-StockPilot helps businesses track their inventory with:
+**Inventory Management**:
+- ✅ **Product Tracking** - Add, edit, delete inventory items
+- ✅ **Stock Level Monitoring** - Real-time stock quantity display
+- ✅ **Low Stock Alerts** - Visual indicators for items below threshold
+- ✅ **Category Organization** - Group items by type (Raw Material, Packaging, Products)
+- ✅ **Search & Filter** - Find items by name or category
+- ✅ **Responsive UI** - Works on desktop, tablet, mobile
 
-- **Inventory Management** - Add, edit, delete products with categories and stock levels
-- **Low Stock Alerts** - Automatic detection when items fall below their threshold
-- **Stock Movement Tracking** - Full history of stock in/out with reasons
-- **Dashboard Analytics** - Real-time metrics showing inventory health
-- **AI-Powered Forecasting** - Intelligent predictions using Google Genkit AI
-- **CSV Export** - Export inventory data for reporting
+**Analytics & Reporting**:
+- ✅ **Dashboard** - Overview of inventory health
+- ✅ **Stock Movement History** - Track all stock in/out transactions
+- ✅ **CSV Export** - Export inventory data for reports
+- ✅ **Visual Charts** - Data visualization with Recharts
 
-## Tech Stack
+**User Interface**:
+- ✅ **Modern Design** - Clean, professional interface
+- ✅ **Dark Mode** - Easy on the eyes
+- ✅ **Data Tables** - Sortable, filterable inventory lists
+- ✅ **Modal Dialogs** - Add/edit item forms
 
-**Frontend**
-- Next.js 15 (App Router)
-- TypeScript
-- Tailwind CSS + shadcn/ui
-- Recharts for data visualization
-- React Hook Form + Zod validation
+### Backend Features (Code Complete, Deployment Pending) 🚧
 
-**Backend**
-- Node.js + Express
-- MongoDB + Mongoose
-- JWT authentication
+The backend code exists in the repository with:
+- 📁 Express.js API server structure
+- 📁 MongoDB/Mongoose models
+- 📁 JWT authentication system
+- 📁 Stock movement tracking endpoints
+- 📁 Analytics and forecasting logic
+- 📁 Database seeding scripts
 
-## Getting Started
+**Note**: Backend is ready but requires deployment to connect to production frontend.
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend (✅ Deployed)
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Charts**: Recharts
+- **Forms**: React Hook Form + Zod validation
+
+### Backend (📂 Code Ready, Deployment Pending)
+- **API**: Express.js
+- **Database**: MongoDB + Mongoose
+- **Auth**: JWT authentication
+- **Validation**: Express validators
+
+### Deployment
+- **Frontend**: Vercel (live)
+- **Backend**: Pending deployment (Railway/Render)
+- **Database**: MongoDB Atlas (to be configured)
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 18+
-- MongoDB (local or Atlas)
+- npm or yarn
+- MongoDB (for backend development)
 
-### Installation
+### Frontend Only (Current Live Demo)
 
 ```bash
-# Clone the repo
+# Clone repository
 git clone https://github.com/unnita1235/StockPilot.git
 cd StockPilot
 
-# Install all dependencies (frontend + backend)
+# Install dependencies
+npm install
+
+# Run frontend
+npm run dev:frontend
+
+# Open http://localhost:9002
+```
+
+### Full-Stack Development (Local)
+
+```bash
+# Install all dependencies
 npm run install:all
 
-# Copy environment variables
+# Set up environment variables
 cp .env.example .env
 
-# Seed the database with sample data
+# Start MongoDB locally
+# (macOS: brew services start mongodb-community)
+# (Linux: sudo systemctl start mongod)
+
+# Seed database with sample data
 npm run seed
 
 # Run both frontend and backend
 npm run dev
+
+# Frontend: http://localhost:9002
+# Backend API: http://localhost:3001
 ```
 
-Frontend runs on [http://localhost:9002](http://localhost:9002)
-Backend API runs on [http://localhost:3001](http://localhost:3001)
+---
 
-### Running Separately
-
-```bash
-# Frontend only
-npm run dev:frontend
-
-# Backend only
-npm run dev:server
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 StockPilot/
 ├── src/                      # Frontend (Next.js)
-│   ├── app/                  # App router pages
-│   ├── components/           # React components
-│   │   ├── inventory/        # Business logic components
-│   │   └── ui/               # shadcn/ui components
-│   ├── hooks/                # Custom React hooks
-│   └── lib/                  # API client, types, utilities
+│   ├── app/
+│   │   ├── page.tsx          # Dashboard/Inventory page
+│   │   ├── analytics/        # Analytics page
+│   │   └── api/              # API route handlers (placeholder)
+│   ├── components/
+│   │   ├── inventory/
+│   │   │   ├── InventoryTable.tsx
+│   │   │   ├── AddItemDialog.tsx
+│   │   │   ├── StockMovementDialog.tsx
+│   │   │   └── LowStockBadge.tsx
+│   │   └── ui/               # shadcn components
+│   ├── hooks/
+│   │   └── useInventory.ts   # Inventory data hooks
+│   └── lib/
+│       ├── api.ts            # API client
+│       └── types.ts          # TypeScript types
 │
 ├── server/                   # Backend (Express)
-│   ├── controllers/          # Route handlers
-│   ├── models/               # Mongoose schemas
-│   ├── routes/               # API routes
-│   ├── middleware/           # Auth, error handling
-│   ├── utils/                # Forecasting utilities
-│   └── scripts/              # Seed script
+│   ├── controllers/
+│   │   ├── itemController.js
+│   │   ├── stockController.js
+│   │   └── analyticsController.js
+│   ├── models/
+│   │   ├── Item.js           # Inventory item model
+│   │   ├── StockMovement.js  # Movement tracking
+│   │   └── User.js           # User authentication
+│   ├── routes/
+│   │   ├── items.js          # Item CRUD routes
+│   │   ├── stock.js          # Stock operations
+│   │   └── analytics.js      # Analytics endpoints
+│   ├── middleware/
+│   │   └── auth.js           # JWT verification
+│   └── scripts/
+│       └── seed.js           # Database seeding
 │
-└── package.json              # Scripts for both
+└── package.json              # Root scripts
 ```
 
-## API Endpoints
+---
+
+## 🎯 Core Features Explained
+
+### 1. Inventory Management
+- Add new products with name, description, category, quantities
+- Edit existing items
+- Delete items (with confirmation)
+- Track current stock vs. low stock threshold
+
+### 2. Stock Movement Tracking
+- Record stock additions (purchases, returns)
+- Record stock removals (sales, usage)
+- Full history of all transactions
+- Reasons and notes for each movement
+
+### 3. Low Stock Alerts
+- Automatic detection when stock falls below threshold
+- Visual badges on items
+- Dashboard summary of low stock items
+
+### 4. Analytics Dashboard
+- Total items count
+- Total stock value
+- Low stock items count
+- Recent movement activity
+
+### 5. Data Export
+- Export inventory to CSV
+- Include all item details
+- Useful for external reporting
+
+---
+
+## 🔧 Available Scripts
+
+### Development
+```bash
+npm run dev                # Run both frontend + backend
+npm run dev:frontend       # Frontend only (port 9002)
+npm run dev:server        # Backend only (port 3001)
+```
+
+### Installation
+```bash
+npm run install:all       # Install all dependencies
+npm run seed              # Seed database with sample data
+```
+
+### Production
+```bash
+npm run build             # Build frontend for production
+npm start                 # Start production server
+```
+
+---
+
+## 🎨 Current Implementation
+
+### What Works Now
+The deployed frontend (https://stock-pilot-wheat.vercel.app) demonstrates:
+- ✅ Full inventory UI
+- ✅ Interactive data tables
+- ✅ Add/Edit/Delete dialogs
+- ✅ Stock movement interface
+- ✅ Analytics dashboard
+- ✅ Demo data simulation
+
+### What's Next
+To make this production-ready:
+- 🚧 Deploy Express backend to Railway/Render
+- 🚧 Set up MongoDB Atlas database
+- 🚧 Connect frontend to backend API
+- 🚧 Implement user authentication
+- 🚧 Add real data persistence
+
+---
+
+## 📊 API Endpoints (Backend Code Ready)
 
 ### Items
-- `GET /api/items` - List all items (supports `?category=`, `?search=`, `?lowStock=true`)
-- `GET /api/items/:id` - Get single item
-- `POST /api/items` - Create item
-- `PUT /api/items/:id` - Update item
-- `DELETE /api/items/:id` - Delete item
-- `GET /api/items/low-stock` - Get all low stock items
+```
+GET    /api/items              # List all items
+GET    /api/items/:id          # Get single item
+POST   /api/items              # Create item
+PUT    /api/items/:id          # Update item
+DELETE /api/items/:id          # Delete item
+GET    /api/items/low-stock    # Get low stock items
+```
 
 ### Stock Movements
-- `POST /api/stock/add` - Add stock (stock in)
-- `POST /api/stock/remove` - Remove stock (stock out)
-- `POST /api/stock/adjust` - Adjust to specific level
-- `PUT /api/stock/quick-update/:id` - Quick stock update
-- `GET /api/stock/movements/:itemId` - Get item's movement history
-- `GET /api/stock/movements/recent` - Get recent movements
+```
+POST   /api/stock/add          # Add stock
+POST   /api/stock/remove       # Remove stock
+POST   /api/stock/adjust       # Adjust to specific level
+GET    /api/stock/movements/:itemId
+```
 
 ### Analytics
-- `GET /api/analytics/dashboard` - Dashboard summary stats
-- `GET /api/analytics/trends` - Stock movement trends
-- `GET /api/analytics/forecast/:itemId` - Item demand forecast
-- `GET /api/analytics/categories` - Category breakdown
-- `GET /api/analytics/top-movers` - Most active items
-- `GET /api/analytics/alerts` - Low stock and slow-moving alerts
+```
+GET    /api/analytics/dashboard    # Dashboard stats
+GET    /api/analytics/trends       # Stock trends
+GET    /api/analytics/forecast/:id # Demand forecast
+```
 
-### Auth
-- `POST /api/auth/register` - Create account
-- `POST /api/auth/login` - Get JWT token
-- `GET /api/auth/me` - Get current user (requires auth)
+### Authentication
+```
+POST   /api/auth/register     # Create account
+POST   /api/auth/login        # Get JWT token
+GET    /api/auth/me          # Current user
+```
 
-## Environment Variables
+---
+
+## 🔐 Environment Variables
 
 ```bash
-# Database
+# Database (for backend)
 MONGODB_URI=mongodb://localhost:27017/stockpilot
 
-# Auth
+# Authentication
 JWT_SECRET=your_secret_here
 JWT_EXPIRES_IN=7d
 
-# Server
+# Backend Server
 PORT=3001
 NODE_ENV=development
 FRONTEND_URL=http://localhost:9002
@@ -167,124 +300,117 @@ FRONTEND_URL=http://localhost:9002
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
-## Features Explained
+---
 
-### Forecasting
+## 📝 Current Limitations
 
-The forecasting system uses weighted moving averages and trend detection:
+**Frontend (Deployed)**:
+- ✅ Fully functional UI
+- ⚠️ Using demo/mock data
+- ⚠️ No real persistence (data resets on refresh)
 
-1. **Daily Usage Calculation** - Weighted average of last 7-30 days of stock-out movements
-2. **Trend Detection** - Compares recent vs older usage to detect increasing/decreasing patterns
-3. **Days to Stockout** - Estimates when current stock will run out
-4. **Reorder Point Suggestion** - Calculates optimal low stock threshold based on lead time
+**Backend (Code Complete)**:
+- ✅ All code written and tested locally
+- ⚠️ Not yet deployed to production
+- ⚠️ Needs cloud database configuration
 
-This is practical forecasting based on historical data, not machine learning.
+---
 
-### Real-time Updates
+## 🗺️ Development Roadmap
 
-The frontend polls the backend every 10 seconds for inventory data and every 30 seconds for dashboard stats. This provides near-real-time updates without the complexity of WebSockets.
+### Phase 1 (Current) - Frontend ✅
+- [x] Inventory management UI
+- [x] Stock movement interface
+- [x] Analytics dashboard
+- [x] Responsive design
+- [x] Demo data system
 
-### Offline Fallback
+### Phase 2 (In Progress) - Backend Deployment
+- [ ] Deploy Express API to Railway/Render
+- [ ] Set up MongoDB Atlas
+- [ ] Connect frontend to backend
+- [ ] User authentication
+- [ ] Real data persistence
 
-If the backend is unavailable, the frontend falls back to sample data and shows an "Offline" indicator. Operations can still be performed locally.
+### Phase 3 (Future) - Advanced Features
+- [ ] Multi-user support
+- [ ] Role-based permissions
+- [ ] Barcode scanning
+- [ ] Email alerts for low stock
+- [ ] Advanced forecasting
+- [ ] Supplier management
+- [ ] Purchase order generation
 
-## Default Login
+---
 
-After seeding, you can log in with:
-- Email: `admin@stockpilot.com`
-- Password: `admin123`
+## 💡 What This Project Demonstrates
 
-## Development
+### Skills Proven
+- ✅ **Full-Stack Architecture** - Complete MERN-like stack design
+- ✅ **TypeScript Proficiency** - Type-safe frontend development
+- ✅ **Modern React** - Next.js 15 App Router, hooks, components
+- ✅ **UI/UX Design** - Professional inventory management interface
+- ✅ **Data Visualization** - Charts and analytics
+- ✅ **Form Handling** - Complex forms with validation
+- ✅ **Backend API Design** - RESTful endpoints (code complete)
 
-```bash
-# Type check frontend
-npm run typecheck
+### Learning Journey
+This project represents my progression from frontend-only to full-stack:
+- Started with UI design and frontend logic
+- Built complete backend API structure
+- Currently learning production deployment and DevOps
+- Next: Connecting all pieces in production environment
 
-# Lint frontend
-npm run lint
+---
 
-# Run tests
-npm test
-cd server && npm test
+## 📄 License
 
-# Seed fresh data
-npm run seed
-```
+MIT License - Portfolio/Learning Project
 
-## Docker Deployment
+---
 
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
+## 👤 Author
 
-# Or build individually
-docker build -t stockpilot-frontend .
-docker build -t stockpilot-backend ./server
-```
+**Unni T A**  
+Full-Stack Developer (Frontend Strong, Backend Learning)
 
-## Testing
+- GitHub: [@unnita1235](https://github.com/unnita1235)
+- Email: unnita1235@gmail.com
 
-This project includes comprehensive test coverage:
+---
 
-- **Backend Tests**: Jest + Supertest for API endpoints
-- **Frontend Tests**: Jest + React Testing Library for components
-- **CI/CD**: Automated testing via GitHub Actions
+## 🙏 Acknowledgments
 
-Run tests:
-```bash
-# Frontend tests
-npm test
+- Next.js for excellent framework
+- shadcn/ui for beautiful components
+- Recharts for data visualization
+- MongoDB for database solution
 
-# Backend tests
-cd server && npm test
-```
+---
 
-## What I Learned
+## ⚠️ Honest Project Status
 
-Building StockPilot was an incredible learning experience that helped me master:
+**What's Real**:
+- ✅ Fully functional frontend deployed on Vercel
+- ✅ Complete backend code in repository
+- ✅ All features designed and coded
+- ✅ Works perfectly in local development
 
-### Full-Stack Development
-- **Next.js 15 App Router**: Modern React framework with server components and routing
-- **TypeScript**: Type-safe development across frontend and backend
-- **Express.js**: Building RESTful APIs with proper middleware and error handling
-- **MongoDB + Mongoose**: Database design, schema modeling, and aggregation pipelines
+**What's Pending**:
+- 🚧 Backend API deployment (code ready, needs hosting)
+- 🚧 Production database setup
+- 🚧 Frontend-backend connection in production
+- 🚧 User authentication in production
 
-### Authentication & Security
-- **JWT Authentication**: Secure token-based authentication flow
-- **Password Hashing**: bcrypt for secure password storage
-- **Protected Routes**: Client and server-side route protection
-- **Role-Based Access Control**: Admin, manager, and staff roles
+**Why This Matters**:
+This project demonstrates I can architect and build a complete full-stack application. The challenge is production deployment and DevOps, which I'm actively learning.
 
-### Modern UI/UX
-- **shadcn/ui**: Building accessible, customizable components
-- **Tailwind CSS**: Utility-first styling with responsive design
-- **React Hook Form + Zod**: Form validation and type safety
-- **Real-time Updates**: Polling strategies for live data
+---
 
-### DevOps & Best Practices
-- **Docker**: Containerization for easy deployment
-- **CI/CD**: GitHub Actions for automated testing and deployment
-- **Testing**: Unit and integration tests with Jest
-- **Code Quality**: ESLint, TypeScript strict mode, and code organization
+**Status**: 🎯 **Full-Stack Ready** - Frontend deployed, backend code complete, production deployment in progress
 
-### Advanced Features
-- **AI Integration**: Google Genkit for intelligent stock analysis
-- **Data Visualization**: Recharts for analytics dashboards
-- **Forecasting Algorithms**: Moving averages and trend detection
-- **Error Handling**: Comprehensive error boundaries and user feedback
+*Last updated: January 2026*
 
-### Project Management
-- **Git Workflow**: Feature branches, commits, and pull requests
-- **Documentation**: Clear README, API docs, and contributing guidelines
-- **Environment Management**: Secure configuration with .env files
-- **Database Seeding**: Scripts for development and testing
+---
 
-This project demonstrates production-ready code with proper architecture, testing, and deployment practices.
-
-## License
-
-MIT
-
-## Author
-
-Unni T A - [@unnita1235](https://github.com/unnita1235)
+**This project showcases real full-stack development skills with honest transparency about deployment status.**
