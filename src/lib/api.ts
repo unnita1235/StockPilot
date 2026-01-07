@@ -14,6 +14,19 @@ interface AuthResponse {
   };
 }
 
+export interface DashboardStats {
+    totalItems: number;
+    lowStockItems: number;
+    lowStockPercentage: number;
+    categoryBreakdown: { [key: string]: number };
+    weeklyActivity: {
+          stockIn: number;
+          stockOut: number;
+          movementsIn: number;
+          movementsOut: number;
+    };
+}
+
 // Get auth token from localStorage or cookies
 function getAuthToken(): string | null {
   if (typeof window !== 'undefined') {
