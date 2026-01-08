@@ -17,7 +17,11 @@ export function useDashboard(options: UseDashboardOptions = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isOnline, setIsOnline] = useState(true);
+
   const fetchDashboard = useCallback(async (silent = false) => {
+    if (!isOnline && silent) return; // Don't background poll if we know we are offline
+
     if (!silent) setLoading(true);
     setError(null);
 
@@ -32,10 +36,22 @@ export function useDashboard(options: UseDashboardOptions = {}) {
       setTrends(trendsRes.data);
       setAlerts(alertsRes.data);
       setAlertSummary(alertsRes.summary);
+      setIsOnline(true);
     } catch (err) {
       if (!silent) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
+        // Only show error if it's NOT a connection refused (offline) error
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const isNetworkError = errorMessage.includes('Failed to fetch') ||
+          errorMessage.includes('Connection refused');
+
+        if (isNetworkError) {
+          console.log('Dashboard offline mode active');
+          setIsOnline(false);
+        } else {
+          setError(errorMessage);
+        }
       }
+
       // Set fallback/empty data
       setStats(prev => {
         if (prev) return prev;
@@ -52,21 +68,21 @@ export function useDashboard(options: UseDashboardOptions = {}) {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [isOnline]);
 
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
 
   useEffect(() => {
-    if (pollInterval <= 0) return;
+    if (pollInterval <= 0 || !isOnline) return;
 
     const interval = setInterval(() => {
       fetchDashboard(true);
     }, pollInterval);
 
     return () => clearInterval(interval);
-  }, [pollInterval, fetchDashboard]);
+  }, [pollInterval, isOnline, fetchDashboard]);
 
   const refresh = useCallback(() => {
     return fetchDashboard(false);

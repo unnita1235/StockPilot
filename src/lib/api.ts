@@ -138,7 +138,11 @@ export async function apiRequest<T>(
 
     return response.json() as Promise<T>;
   } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error);
+    if (error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('Connection refused'))) {
+      console.warn(`API Network Error [${endpoint}]:`, error.message);
+    } else {
+      console.error(`API Error [${endpoint}]:`, error);
+    }
     throw error;
   }
 }
