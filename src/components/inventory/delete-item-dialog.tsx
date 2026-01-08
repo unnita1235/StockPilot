@@ -31,7 +31,7 @@ export function DeleteItemDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the item "{item.name}" from your inventory.
+            This action cannot be undone. This will permanently delete the item &quot;{item.name}&quot; from your inventory.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

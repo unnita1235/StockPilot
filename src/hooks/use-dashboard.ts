@@ -37,8 +37,9 @@ export function useDashboard(options: UseDashboardOptions = {}) {
         setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
       }
       // Set fallback/empty data
-      if (!stats) {
-        setStats({
+      setStats(prev => {
+        if (prev) return prev;
+        return {
           totalItems: 0,
           lowStockItems: 0,
           lowStockPercentage: 0,
@@ -46,16 +47,16 @@ export function useDashboard(options: UseDashboardOptions = {}) {
           recentMovements: 0,
           totalInventoryValue: 0,
           weeklyActivity: { stockIn: 0, stockOut: 0, movementsIn: 0, movementsOut: 0 },
-        });
-      }
+        };
+      });
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [stats]);
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [fetchDashboard]);
 
   useEffect(() => {
     if (pollInterval <= 0) return;
