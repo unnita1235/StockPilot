@@ -20,7 +20,9 @@ StockPilot demonstrates a modern **Hybrid Architecture**:
 ![StockPilot Dashboard](/public/screenshots/dashboard.png)
 
 > **Note on the Demo Environment**:
-> The live URL runs in **"Preview Mode"**. To ensure high availability and zero-cost maintenance for this portfolio showcase, the frontend detects that the backend is offline and seamlessy switches to using **Mock Data** and local state.
+> The live URL runs in **"Preview Mode"**. To ensure high availability and zero-cost maintenance for this portfolio showcase, the frontend detects that the backend is offline and seamlessly switches to using **Mock Data** and local state.
+>
+> **New Feature**: This includes **Offline Authentication**. You can log in with the demo credentials even without a backend connection, demonstrating robust error handling and fallback patterns.
 >
 > To experience the full **Production Mode** (with real database persistence, JWT authentication, and live stock updates), please run the application locally.
 
