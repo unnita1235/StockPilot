@@ -49,7 +49,7 @@ describe('Items API', () => {
       await itemsApi.getAll({ category: 'Raw Material', search: 'coffee' });
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('category=Raw%20Material'),
+        expect.stringContaining('category=Raw+Material'),
         expect.any(Object)
       );
       expect(fetch).toHaveBeenCalledWith(

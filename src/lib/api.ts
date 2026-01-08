@@ -189,13 +189,21 @@ export const authApi = {
 
 // Items endpoints
 export const itemsApi = {
-  async getAll() {
-    const response = await apiRequest<ApiResponse<ApiInventoryItem[]>>('/items');
+  async getAll(filters?: { category?: string; search?: string; lowStock?: boolean }) {
+    const params = new URLSearchParams();
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.lowStock) params.append('lowStock', 'true');
+
+    const queryString = params.toString();
+    const endpoint = queryString ? `/items?${queryString}` : '/items';
+
+    const response = await apiRequest<ApiResponse<ApiInventoryItem[]>>(endpoint, { method: 'GET' });
     return response;
   },
 
   async getById(id: string) {
-    const response = await apiRequest<ApiResponse<ApiInventoryItem>>(`/items/${id}`);
+    const response = await apiRequest<ApiResponse<ApiInventoryItem>>(`/items/${id}`, { method: 'GET' });
     return response;
   },
 
