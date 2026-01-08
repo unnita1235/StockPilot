@@ -11,7 +11,7 @@ function transformItem(item: ApiInventoryItem): InventoryItem {
     name: item.name,
     description: item.description,
     stock: item.stock,
-    category: item.category,
+    category: item.category as InventoryCategory,
     lowStockThreshold: item.lowStockThreshold,
     sku: item.sku,
     unitPrice: item.unitPrice,

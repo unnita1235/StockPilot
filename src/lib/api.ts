@@ -5,26 +5,67 @@ interface ApiErrorResponse {
   message?: string;
 }
 
-interface AuthResponse {
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role?: string;
+}
+
+export interface AuthResponse {
   token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
+  user: User;
+}
+
+export interface AuthResult {
+  data: AuthResponse;
 }
 
 export interface DashboardStats {
-    totalItems: number;
-    lowStockItems: number;
-    lowStockPercentage: number;
-    categoryBreakdown: { [key: string]: number };
-    weeklyActivity: {
-          stockIn: number;
-          stockOut: number;
-          movementsIn: number;
-          movementsOut: number;
-    };
+  totalItems: number;
+  lowStockItems: number;
+  lowStockPercentage: number;
+  categoryBreakdown: { [key: string]: number };
+  recentMovements?: number;
+  totalInventoryValue?: number;
+  weeklyActivity: {
+    stockIn: number;
+    stockOut: number;
+    movementsIn: number;
+    movementsOut: number;
+  };
+}
+
+export interface TrendData {
+  date: string;
+  in: number;
+  out: number;
+}
+
+export interface Alert {
+  id: string;
+  type: 'critical' | 'warning' | 'info';
+  message: string;
+  itemId?: string;
+  createdAt: string;
+}
+
+export interface AlertSummary {
+  critical: number;
+  warning: number;
+  info: number;
+}
+
+export interface ApiInventoryItem {
+  _id: string;
+  name: string;
+  description: string;
+  stock: number;
+  category: string;
+  lowStockThreshold: number;
+  sku?: string;
+  unitPrice?: number;
+  isLowStock: boolean;
 }
 
 // Get auth token from localStorage or cookies
@@ -59,9 +100,9 @@ export async function apiRequest<T>(
   const url = `${API_URL}${endpoint}`;
   const token = getAuthToken();
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options?.headers,
+    ...(options?.headers as Record<string, string>),
   };
 
   if (token) {
@@ -132,22 +173,22 @@ export const authApi = {
 // Items endpoints
 export const itemsApi = {
   async getAll() {
-    return apiRequest('/items');
+    return apiRequest<{ data: ApiInventoryItem[] }>('/items');
   },
 
   async getById(id: string) {
-    return apiRequest(`/items/${id}`);
+    return apiRequest<{ data: ApiInventoryItem }>(`/items/${id}`);
   },
 
-  async create(data: any) {
-    return apiRequest('/items', {
+  async create(data: Partial<ApiInventoryItem>) {
+    return apiRequest<{ data: ApiInventoryItem }>('/items', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  async update(id: string, data: any) {
-    return apiRequest(`/items/${id}`, {
+  async update(id: string, data: Partial<ApiInventoryItem>) {
+    return apiRequest<{ data: ApiInventoryItem }>(`/items/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -180,20 +221,31 @@ export const stockApi = {
     const endpoint = itemId ? `/stock/movements?itemId=${itemId}` : '/stock/movements';
     return apiRequest(endpoint);
   },
+
+  async quickUpdate(id: string, stock: number) {
+    return apiRequest<{ data: ApiInventoryItem }>(`/stock/quick-update/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ stock }),
+    });
+  },
 };
 
 // Analytics endpoints
 export const analyticsApi = {
   async getDashboard() {
-    return apiRequest('/analytics/dashboard');
+    return apiRequest<{ data: DashboardStats }>('/analytics/dashboard');
   },
 
   async getTrends(period: string = 'month') {
-    return apiRequest(`/analytics/trends?period=${period}`);
+    return apiRequest<{ data: TrendData[] }>(`/analytics/trends?period=${period}`);
   },
 
   async getReport(type: string) {
     return apiRequest(`/analytics/report?type=${type}`);
+  },
+
+  async getAlerts() {
+    return apiRequest<{ data: Alert[]; summary: AlertSummary }>('/analytics/alerts');
   },
 };
 

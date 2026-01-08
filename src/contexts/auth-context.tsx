@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, User, AuthResult } from '@/lib/api';
+import { authApi, User, AuthResponse } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -41,8 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await authApi.login(email, password);
-    const result = response.data;
+    const result = await authApi.login(email, password);
     setToken(result.token);
     setUser(result.user);
     localStorage.setItem('stockpilot_token', result.token);
@@ -50,8 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const response = await authApi.register(name, email, password);
-    const result = response.data;
+    const result = await authApi.register(email, password, name);
     setToken(result.token);
     setUser(result.user);
     localStorage.setItem('stockpilot_token', result.token);
