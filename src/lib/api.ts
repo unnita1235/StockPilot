@@ -18,11 +18,19 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
-
-export interface WrappedAuthResponse {
+// Update WrappedAuthResponse to be a generic wrapper
+export interface ApiResponse<T> {
   success: boolean;
-  data: AuthResponse;
+  data: T;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  summary?: AlertSummary; // For alerts endpoint
 }
+
 
 export interface AuthResult {
   data: AuthResponse;
@@ -138,7 +146,7 @@ export async function apiRequest<T>(
 // Authentication endpoints
 export const authApi = {
   async register(email: string, password: string, name: string): Promise<AuthResponse> {
-    const response = await apiRequest<WrappedAuthResponse>('/auth/register', {
+    const response = await apiRequest<ApiResponse<AuthResponse>>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     });
@@ -150,7 +158,7 @@ export const authApi = {
   },
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await apiRequest<WrappedAuthResponse>('/auth/login', {
+    const response = await apiRequest<ApiResponse<AuthResponse>>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
@@ -182,25 +190,29 @@ export const authApi = {
 // Items endpoints
 export const itemsApi = {
   async getAll() {
-    return apiRequest<{ data: ApiInventoryItem[] }>('/items');
+    const response = await apiRequest<ApiResponse<ApiInventoryItem[]>>('/items');
+    return response;
   },
 
   async getById(id: string) {
-    return apiRequest<{ data: ApiInventoryItem }>(`/items/${id}`);
+    const response = await apiRequest<ApiResponse<ApiInventoryItem>>(`/items/${id}`);
+    return response;
   },
 
   async create(data: Partial<ApiInventoryItem>) {
-    return apiRequest<{ data: ApiInventoryItem }>('/items', {
+    const response = await apiRequest<ApiResponse<ApiInventoryItem>>('/items', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    return response;
   },
 
   async update(id: string, data: Partial<ApiInventoryItem>) {
-    return apiRequest<{ data: ApiInventoryItem }>(`/items/${id}`, {
+    const response = await apiRequest<ApiResponse<ApiInventoryItem>>(`/items/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+    return response;
   },
 
   async delete(id: string) {
@@ -242,11 +254,13 @@ export const stockApi = {
 // Analytics endpoints
 export const analyticsApi = {
   async getDashboard() {
-    return apiRequest<{ data: DashboardStats }>('/analytics/dashboard');
+    const response = await apiRequest<ApiResponse<DashboardStats>>('/analytics/dashboard');
+    return response;
   },
 
   async getTrends(period: string = 'month') {
-    return apiRequest<{ data: TrendData[] }>(`/analytics/trends?period=${period}`);
+    const response = await apiRequest<ApiResponse<TrendData[]>>(`/analytics/trends?period=${period}`);
+    return response;
   },
 
   async getReport(type: string) {
@@ -254,7 +268,8 @@ export const analyticsApi = {
   },
 
   async getAlerts() {
-    return apiRequest<{ data: Alert[]; summary: AlertSummary }>('/analytics/alerts');
+    const response = await apiRequest<ApiResponse<Alert[]>>('/analytics/alerts');
+    return { data: response.data, summary: response.summary! };
   },
 };
 
