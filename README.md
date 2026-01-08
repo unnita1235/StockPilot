@@ -17,7 +17,7 @@ StockPilot demonstrates a modern **Hybrid Architecture**:
 
 ### [View the Live Demo](https://stock-pilot-wheat.vercel.app)
 
-![StockPilot Dashboard](/public/screenshots/dashboard.png)
+![StockPilot Offline Dashboard](/public/screenshots/offline-dashboard.png)
 
 > **Note on the Demo Environment**:
 > The live URL runs in **"Preview Mode"**. To ensure high availability and zero-cost maintenance for this portfolio showcase, the frontend detects that the backend is offline and seamlessly switches to using **Mock Data** and local state.
