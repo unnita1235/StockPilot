@@ -6,15 +6,22 @@ interface ApiErrorResponse {
 }
 
 export interface User {
-  id: string;
+  id?: string;
+  _id?: string;
   email: string;
   name: string;
   role?: string;
 }
 
+
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface WrappedAuthResponse {
+  success: boolean;
+  data: AuthResponse;
 }
 
 export interface AuthResult {
@@ -131,25 +138,27 @@ export async function apiRequest<T>(
 // Authentication endpoints
 export const authApi = {
   async register(email: string, password: string, name: string): Promise<AuthResponse> {
-    const response = await apiRequest<AuthResponse>('/auth/register', {
+    const response = await apiRequest<WrappedAuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     });
-    if (response.token) {
-      setAuthToken(response.token);
+    const authData = response.data;
+    if (authData.token) {
+      setAuthToken(authData.token);
     }
-    return response;
+    return authData;
   },
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await apiRequest<AuthResponse>('/auth/login', {
+    const response = await apiRequest<WrappedAuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    if (response.token) {
-      setAuthToken(response.token);
+    const authData = response.data;
+    if (authData.token) {
+      setAuthToken(authData.token);
     }
-    return response;
+    return authData;
   },
 
   async logout(): Promise<void> {
