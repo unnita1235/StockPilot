@@ -6,6 +6,8 @@ import { ConfigModule } from '@nestjs/config';
 import { StockModule } from './stock/stock.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 
+import { HealthModule } from './health/health.module';
+
 @Module({
     imports: [
         ConfigModule.forRoot(),
@@ -14,6 +16,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
         AuthModule,
         StockModule,
         AnalyticsModule,
+        HealthModule,
     ],
 })
 export class AppModule { }
