@@ -13,6 +13,11 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testMatch: ['**/__tests__/**/*.test.{ts,tsx}', '**/?(*.)+(spec|test).{ts,tsx}'],
+  // Exclude backend from root tests (run backend tests separately)
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/backend/',
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -21,6 +26,15 @@ const customJestConfig = {
   ],
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig);
+// Export an async function that properly overrides transformIgnorePatterns
+// This is necessary because next/jest sets its own transformIgnorePatterns
+module.exports = async () => {
+  const jestConfig = await createJestConfig(customJestConfig)();
 
+  // Override transformIgnorePatterns to handle ESM modules like lucide-react
+  jestConfig.transformIgnorePatterns = [
+    '/node_modules/(?!(lucide-react|@radix-ui|class-variance-authority|clsx|tailwind-merge)/)',
+  ];
+
+  return jestConfig;
+};
