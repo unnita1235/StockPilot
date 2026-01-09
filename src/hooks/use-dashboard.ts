@@ -13,7 +13,7 @@ export function useDashboard(options: UseDashboardOptions = {}) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [trends, setTrends] = useState<TrendData[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [alertSummary, setAlertSummary] = useState<AlertSummary>({ critical: 0, warning: 0, info: 0 });
+  const [alertSummary, setAlertSummary] = useState<AlertSummary>({ critical: 0, warning: 0, info: 0, data: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
