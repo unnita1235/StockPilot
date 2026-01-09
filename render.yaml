@@ -3,13 +3,13 @@ services:
     name: stockpilot-backend
     env: node
     plan: free
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3001
+        value: 5000
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
