@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 interface ApiErrorResponse {
   error?: string;
@@ -69,6 +69,7 @@ export interface AlertSummary {
   critical: number;
   warning: number;
   info: number;
+  data: Alert[];
 }
 
 export interface ApiInventoryItem {
@@ -86,7 +87,7 @@ export interface ApiInventoryItem {
 // Get auth token from localStorage or cookies
 function getAuthToken(): string | null {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+    return localStorage.getItem('stockpilot_token') || sessionStorage.getItem('stockpilot_token');
   }
   return null;
 }
@@ -94,16 +95,16 @@ function getAuthToken(): string | null {
 // Set auth token
 function setAuthToken(token: string): void {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', token);
-    sessionStorage.setItem('auth_token', token);
+    localStorage.setItem('stockpilot_token', token);
+    sessionStorage.setItem('stockpilot_token', token);
   }
 }
 
 // Clear auth token
 function clearAuthToken(): void {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_token');
+    localStorage.removeItem('stockpilot_token');
+    sessionStorage.removeItem('stockpilot_token');
   }
 }
 
