@@ -50,7 +50,7 @@ export class AnalyticsService {
         };
     }
 
-    async getTrends(period: string) {
+    async getTrends(_period: string) {
         // Return dummy trend data for charts for now
         // Real implementation requires detailed aggregation pipeline
         return [

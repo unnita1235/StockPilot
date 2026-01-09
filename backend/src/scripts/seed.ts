@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
-import { Model } from 'mongoose';
+
 import { getModelToken } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 
@@ -28,7 +28,7 @@ async function seed() {
         name: 'Admin User',
         role: 'admin',
     });
-    console.log('✓ Created admin user: admin@stockpilot.com / admin123');
+    console.log(`✓ Created admin user (${adminUser._id}): admin@stockpilot.com / admin123`);
 
     // Create inventory items
     const items = [

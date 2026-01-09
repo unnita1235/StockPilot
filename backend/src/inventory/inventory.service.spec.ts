@@ -25,10 +25,9 @@ const mockInventoryModel = {
 
 describe('InventoryService', () => {
     let service: InventoryService;
-    let model: any;
 
     beforeEach(async () => {
-        const module: TestingModule = await Test.createTestingModule({
+        const testModule: TestingModule = await Test.createTestingModule({
             providers: [
                 InventoryService,
                 {
@@ -38,8 +37,7 @@ describe('InventoryService', () => {
             ],
         }).compile();
 
-        service = module.get<InventoryService>(InventoryService);
-        model = module.get(getModelToken(Inventory.name));
+        service = testModule.get<InventoryService>(InventoryService);
     });
 
     it('should be defined', () => {
