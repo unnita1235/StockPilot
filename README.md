@@ -23,6 +23,11 @@ Retailers lose millions annually due to inaccurate inventory tracking and stocko
 ## Quick Start
 ```bash
 git clone https://github.com/unnita1235/StockPilot.git
+cd StockPilot
+
+# Start backend
 cd backend && npm install && npm run start:dev
-cd ../frontend && npm install && npm run dev
+
+# In another terminal, start frontend (from root)
+cd StockPilot && npm install && npm run dev
 ```
