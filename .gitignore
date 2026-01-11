@@ -3,11 +3,6 @@ node_modules
 /.pnp
 .pnp.js
 
-# dependencies
-node_modules
-/.pnp
-.pnp.js
-
 # testing
 /coverage
 server/coverage
@@ -56,7 +51,6 @@ next-env.d.ts
 
 # OS
 Thumbs.db
-.DS_Store
 
 # logs
 logs/
