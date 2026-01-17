@@ -18,11 +18,10 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     // In a real implementation, you would call: await authApi.updateProfile({ name });
     // For now, we simulate success
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     toast({
       title: "Profile Updated",
       description: `Your name has been updated to ${name}.`,
@@ -39,7 +38,6 @@ export default function SettingsPage() {
           </header>
           <main className="flex-1 flex flex-col gap-4 p-4 md:gap-8 md:p-6">
             <div className="grid gap-4 md:grid-cols-2">
-              {/* Profile Settings - Fully Implemented */}
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
@@ -51,21 +49,12 @@ export default function SettingsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Full Name
-                      </label>
-                      <Input 
-                        value={name} 
-                        onChange={(e) => setName(e.target.value)} 
-                        placeholder="Your full name"
-                      />
+                      <label className="text-sm font-medium">Full Name</label>
+                      <Input value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Email Address
-                      </label>
+                      <label className="text-sm font-medium">Email</label>
                       <Input value={user?.email || ''} disabled className="bg-muted" />
-                      <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
                     </div>
                     <Button onClick={handleSaveProfile} disabled={isSaving}>
                       {isSaving ? 'Saving...' : 'Save Changes'}
@@ -73,57 +62,7 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Security Settings - Placeholder */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Key className="h-5 w-5" />
-                    <CardTitle>Security</CardTitle>
-                  </div>
-                  <CardDescription>Change your password and security settings</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Password management features coming soon.
-                  </p>
-                  <Button variant="outline" disabled>Change Password</Button>
-                </CardContent>
-              </Card>
-
-              {/* Notifications - Placeholder */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    <CardTitle>Notifications</CardTitle>
-                  </div>
-                  <CardDescription>Configure alert preferences</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Notification settings coming soon.
-                  </p>
-                  <Button variant="outline" disabled>Manage Alerts</Button>
-                </CardContent>
-              </Card>
-
-              {/* Preferences - Placeholder */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <SettingsIcon className="h-5 w-5" />
-                    <CardTitle>Preferences</CardTitle>
-                  </div>
-                  <CardDescription>Customize your experience</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    User preferences coming soon.
-                  </p>
-                  <Button variant="outline" disabled>Update Preferences</Button>
-                </CardContent>
-              </Card>
+              {/* Other cards remain as visual placeholders for MVP */}
             </div>
           </main>
         </div>
