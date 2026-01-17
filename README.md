@@ -19,7 +19,7 @@ Retailers lose millions annually due to inaccurate inventory tracking and stocko
 - Designed and implemented full-stack architecture (Next.js + NestJS)
 - Developed REST API and MongoDB models
 - Integrated CI/CD, Docker, and secret scanning
-
+ 
 ## Quick Start
 ```bash
 git clone https://github.com/unnita1235/StockPilot.git
