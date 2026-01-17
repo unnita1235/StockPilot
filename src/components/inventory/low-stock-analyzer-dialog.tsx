@@ -38,17 +38,15 @@ export function LowStockAnalyzerDialog({
     setAnalysis(null);
     setError(null);
     try {
-      // Fetch real movement history for this specific item
+      // 1. Fetch REAL movement history for this item
       const response: any = await stockApi.getMovements(item.id);
-      
-      // Format the movements into a string the AI can understand
-      // e.g., "2024-03-01: IN 50 (Restock), 2024-03-02: OUT 10 (Sale)"
       const movements = Array.isArray(response.data) ? response.data : [];
       
+      // 2. Format history for AI
       let historyString = "No recent stock history available.";
       if (movements.length > 0) {
         historyString = movements
-          .slice(0, 20) // Limit to last 20 to save context window
+          .slice(0, 20)
           .map((m: any) => 
             `${new Date(m.createdAt).toLocaleDateString()}: ${m.type} ${m.quantity} units (Reason: ${m.reason || 'N/A'})`
           )
@@ -57,7 +55,7 @@ export function LowStockAnalyzerDialog({
 
       const result = await analyzeStockData({
         itemId: item.id,
-        historicalStockData: historyString,
+        historicalStockData: historyString, // Real data
         currentStockLevel: item.stock,
         lowStockThreshold: item.lowStockThreshold,
       });
