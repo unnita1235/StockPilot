@@ -13,10 +13,7 @@ export class AuthController {
         @Res() res: Response
     ) {
         const result = await this.authService.register(body.email, body.password, body.name);
-        
-        // Set HTTP-only cookie
         this.setCookie(res, result.token);
-
         return res.status(HttpStatus.CREATED).json({
             user: result.user,
             message: 'Registration successful'
@@ -29,14 +26,17 @@ export class AuthController {
         @Res() res: Response
     ) {
         const result = await this.authService.login(body.email, body.password);
-        
-        // Set HTTP-only cookie
         this.setCookie(res, result.token);
-
         return res.status(HttpStatus.OK).json({
             user: result.user,
             message: 'Login successful'
         });
+    }
+
+    @Post('logout')
+    async logout(@Res() res: Response) {
+        res.clearCookie('stockpilot_token');
+        return res.status(HttpStatus.OK).json({ message: 'Logged out' });
     }
 
     @Get('me')
