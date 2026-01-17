@@ -20,12 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Load auth state from localStorage on mount
   useEffect(() => {
-    // We only load the User object for UI purposes. 
-    // The actual authentication is handled via HTTP-Only cookies.
+    // Only persist User Object for UI state. Token is hidden in Cookie.
     const storedUser = localStorage.getItem('stockpilot_user');
-
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
@@ -37,7 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // API now sets a cookie. We only receive the user object.
     const result = await authApi.login(email, password);
     setUser(result.user);
     localStorage.setItem('stockpilot_user', JSON.stringify(result.user));
@@ -49,10 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('stockpilot_user', JSON.stringify(result.user));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await authApi.logout();
     setUser(null);
     localStorage.removeItem('stockpilot_user');
-    // Ideally call an endpoint like /auth/logout to clear the cookie on server
     router.push('/login');
   };
 
@@ -64,8 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
-        // If we have a user object, we assume we are authenticated.
-        // The backend will reject requests if the cookie is invalid.
         isAuthenticated: !!user,
       }}
     >
