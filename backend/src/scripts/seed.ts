@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
-
 import { getModelToken } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 
@@ -28,20 +27,20 @@ async function seed() {
         name: 'Admin User',
         role: 'admin',
     });
-    console.log(`✓ Created admin user (${adminUser._id}): admin@stockpilot.com / admin123`);
+    console.log(`✓ Created admin user (${adminUser._id})`);
 
-    // Create inventory items
+    // Create inventory items - Updated to match new Schema
     const items = [
-        { name: 'Laptop Dell XPS 15', description: 'High-performance laptop', quantity: 25, threshold: 5, category: 'Electronics', unitPrice: 1299 },
-        { name: 'Wireless Mouse Logitech', description: 'Ergonomic wireless mouse', quantity: 150, threshold: 20, category: 'Electronics', unitPrice: 49 },
-        { name: 'USB-C Hub', description: '7-in-1 USB-C hub', quantity: 75, threshold: 15, category: 'Electronics', unitPrice: 35 },
-        { name: 'Monitor 27" 4K', description: '4K IPS display monitor', quantity: 12, threshold: 5, category: 'Electronics', unitPrice: 450 },
-        { name: 'Mechanical Keyboard', description: 'RGB mechanical keyboard', quantity: 3, threshold: 10, category: 'Electronics', unitPrice: 129 },
-        { name: 'Webcam HD 1080p', description: 'HD webcam with microphone', quantity: 45, threshold: 10, category: 'Electronics', unitPrice: 79 },
-        { name: 'Office Chair Ergonomic', description: 'Adjustable ergonomic chair', quantity: 8, threshold: 5, category: 'Furniture', unitPrice: 299 },
-        { name: 'Standing Desk', description: 'Electric adjustable desk', quantity: 0, threshold: 3, category: 'Furniture', unitPrice: 599 },
-        { name: 'Notebook A5', description: 'Premium lined notebook', quantity: 200, threshold: 50, category: 'Office Supplies', unitPrice: 12 },
-        { name: 'Printer Paper A4', description: 'Pack of 500 sheets', quantity: 100, threshold: 25, category: 'Office Supplies', unitPrice: 8 },
+        { name: 'Laptop Dell XPS 15', description: 'High-performance laptop', quantity: 25, lowStockThreshold: 5, category: 'Electronics', unitPrice: 1299 },
+        { name: 'Wireless Mouse Logitech', description: 'Ergonomic wireless mouse', quantity: 150, lowStockThreshold: 20, category: 'Electronics', unitPrice: 49 },
+        { name: 'USB-C Hub', description: '7-in-1 USB-C hub', quantity: 75, lowStockThreshold: 15, category: 'Electronics', unitPrice: 35 },
+        { name: 'Monitor 27" 4K', description: '4K IPS display monitor', quantity: 12, lowStockThreshold: 5, category: 'Electronics', unitPrice: 450 },
+        { name: 'Mechanical Keyboard', description: 'RGB mechanical keyboard', quantity: 3, lowStockThreshold: 10, category: 'Electronics', unitPrice: 129 },
+        { name: 'Webcam HD 1080p', description: 'HD webcam with microphone', quantity: 45, lowStockThreshold: 10, category: 'Electronics', unitPrice: 79 },
+        { name: 'Office Chair Ergonomic', description: 'Adjustable ergonomic chair', quantity: 8, lowStockThreshold: 5, category: 'Furniture', unitPrice: 299 },
+        { name: 'Standing Desk', description: 'Electric adjustable desk', quantity: 0, lowStockThreshold: 3, category: 'Furniture', unitPrice: 599 },
+        { name: 'Notebook A5', description: 'Premium lined notebook', quantity: 200, lowStockThreshold: 50, category: 'Office Supplies', unitPrice: 12 },
+        { name: 'Printer Paper A4', description: 'Pack of 500 sheets', quantity: 100, lowStockThreshold: 25, category: 'Office Supplies', unitPrice: 8 },
     ];
 
     const createdItems = await InventoryModel.insertMany(items);
@@ -72,9 +71,6 @@ async function seed() {
     console.log(`✓ Created ${movements.length} stock movements`);
 
     console.log('\n🎉 Database seeding complete!');
-    console.log('📧 Login: admin@stockpilot.com');
-    console.log('🔑 Password: admin123');
-
     await app.close();
     process.exit(0);
 }
