@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { InventoryItem } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { stockApi } from '@/lib/api';
 
 type LowStockAnalyzerDialogProps = {
   open: boolean;
@@ -37,13 +38,26 @@ export function LowStockAnalyzerDialog({
     setAnalysis(null);
     setError(null);
     try {
-      // NOTE: In a real application, you would fetch actual historical data.
-      // For this demo, we provide a descriptive string to the LLM.
-      const historicalDataMock = `Recent sales have been steady with a 15% increase in the last month. Supplier lead time is approximately 5 days. Item is a popular daily consumable.`;
+      // Fetch real movement history for this specific item
+      const response: any = await stockApi.getMovements(item.id);
       
+      // Format the movements into a string the AI can understand
+      // e.g., "2024-03-01: IN 50 (Restock), 2024-03-02: OUT 10 (Sale)"
+      const movements = Array.isArray(response.data) ? response.data : [];
+      
+      let historyString = "No recent stock history available.";
+      if (movements.length > 0) {
+        historyString = movements
+          .slice(0, 20) // Limit to last 20 to save context window
+          .map((m: any) => 
+            `${new Date(m.createdAt).toLocaleDateString()}: ${m.type} ${m.quantity} units (Reason: ${m.reason || 'N/A'})`
+          )
+          .join('\n');
+      }
+
       const result = await analyzeStockData({
         itemId: item.id,
-        historicalStockData: historicalDataMock,
+        historicalStockData: historyString,
         currentStockLevel: item.stock,
         lowStockThreshold: item.lowStockThreshold,
       });
