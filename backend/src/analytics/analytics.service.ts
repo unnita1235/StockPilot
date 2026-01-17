@@ -50,19 +50,57 @@ export class AnalyticsService {
         };
     }
 
-    async getTrends(_period: string) {
-        // Return dummy trend data for charts for now
-        // Real implementation requires detailed aggregation pipeline
-        return [
-            { date: '2024-01-01', in: 10, out: 5 },
-            { date: '2024-01-02', in: 15, out: 10 },
-            { date: '2024-01-03', in: 8, out: 12 },
-            { date: '2024-01-04', in: 20, out: 8 },
-            { date: '2024-01-05', in: 12, out: 15 },
-            { date: '2024-01-06', in: 18, out: 20 },
-            { date: '2024-01-07', in: 25, out: 10 },
-        ];
-    }
+    // Replace the existing getTrends method with this real implementation:
+
+async getTrends(period: string = '7d') {
+    // 1. Calculate the start date based on the period (default 7 days)
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7); 
+
+    // 2. Aggregate real data from MongoDB
+    const trends = await this.stockModel.aggregate([
+        {
+            // Filter movements from the last 7 days
+            $match: {
+                createdAt: { $gte: startDate }
+            }
+        },
+        {
+            // Group by Date (YYYY-MM-DD) and Type (IN/OUT)
+            $group: {
+                _id: {
+                    date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    type: "$type"
+                },
+                totalQuantity: { $sum: "$quantity" }
+            }
+        },
+        {
+            // Group again by Date to reshape into { date, in, out }
+            $group: {
+                _id: "$_id.date",
+                in: { 
+                    $sum: { 
+                        $cond: [{ $eq: ["$_id.type", "IN"] }, "$totalQuantity", 0] 
+                    } 
+                },
+                out: { 
+                    $sum: { 
+                        $cond: [{ $eq: ["$_id.type", "OUT"] }, "$totalQuantity", 0] 
+                    } 
+                }
+            }
+        },
+        { $sort: { _id: 1 } } // Sort by date ascending
+    ]).exec();
+
+    // 3. Map to the format the frontend expects
+    return trends.map(t => ({
+        date: t._id,
+        in: t.in,
+        out: t.out
+    }));
+}
 
     async getAlerts() {
         const items = await this.inventoryModel.find({
