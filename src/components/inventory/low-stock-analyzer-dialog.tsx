@@ -39,7 +39,7 @@ export function LowStockAnalyzerDialog({
     setError(null);
     try {
       // 1. Fetch REAL movement history for this item
-      const response: any = await stockApi.getMovements(item.id);
+      const response: any = await stockApi.getMovements({ itemId: item.id });
       const movements = Array.isArray(response.data) ? response.data : [];
       
       // 2. Format history for AI

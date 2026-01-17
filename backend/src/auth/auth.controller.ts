@@ -2,6 +2,7 @@ import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus } from
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Response } from 'express';
+import { createResponse } from '../common/api-response';
 
 @Controller('auth')
 export class AuthController {
@@ -14,10 +15,11 @@ export class AuthController {
     ) {
         const result = await this.authService.register(body.email, body.password, body.name);
         this.setCookie(res, result.token);
-        return res.status(HttpStatus.CREATED).json({
+        // Return wrapped response with token for frontend compatibility
+        return res.status(HttpStatus.CREATED).json(createResponse({
             user: result.user,
-            message: 'Registration successful'
-        });
+            token: result.token,
+        }, 'Registration successful'));
     }
 
     @Post('login')
@@ -27,22 +29,23 @@ export class AuthController {
     ) {
         const result = await this.authService.login(body.email, body.password);
         this.setCookie(res, result.token);
-        return res.status(HttpStatus.OK).json({
+        // Return wrapped response with token for frontend compatibility
+        return res.status(HttpStatus.OK).json(createResponse({
             user: result.user,
-            message: 'Login successful'
-        });
+            token: result.token,
+        }, 'Login successful'));
     }
 
     @Post('logout')
     async logout(@Res() res: Response) {
         res.clearCookie('stockpilot_token');
-        return res.status(HttpStatus.OK).json({ message: 'Logged out' });
+        return res.status(HttpStatus.OK).json(createResponse(null, 'Logged out'));
     }
 
     @Get('me')
     @UseGuards(JwtAuthGuard)
     async getProfile(@Request() req) {
-        return { user: req.user };
+        return createResponse({ user: req.user });
     }
 
     private setCookie(res: Response, token: string) {

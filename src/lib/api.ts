@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Production API URL - MUST be set in environment variables for production
+const API_URL = process.env.NEXT_PUBLIC_API_URL || (
+  typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? '' // Will cause errors if not configured - this is intentional
+    : 'http://localhost:5000/api'
+);
 
 interface ApiErrorResponse {
   error?: string;
@@ -82,6 +87,101 @@ export interface ApiInventoryItem {
   sku?: string;
   unitPrice?: number;
   isLowStock: boolean;
+  totalStockIn?: number;
+  totalStockOut?: number;
+  lastRestockDate?: string;
+  lastSaleDate?: string;
+}
+
+// Stock movement types
+export type MovementType = 'IN' | 'OUT' | 'ADJUST' | 'TRANSFER';
+export type MovementReason = 
+  | 'purchase' 
+  | 'sale' 
+  | 'return' 
+  | 'damaged' 
+  | 'expired' 
+  | 'theft' 
+  | 'correction' 
+  | 'transfer' 
+  | 'initial_stock'
+  | 'quick_update'
+  | 'other';
+
+export interface StockMovement {
+  _id: string;
+  itemId: {
+    _id: string;
+    name: string;
+    sku?: string;
+    category?: string;
+  } | string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  } | string;
+  type: MovementType;
+  quantity: number;
+  reason: MovementReason;
+  notes?: string;
+  previousQuantity: number;
+  newQuantity: number;
+  referenceNumber?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StockOperationResult {
+  movement: StockMovement;
+  item: ApiInventoryItem;
+  previousQuantity: number;
+  newQuantity: number;
+}
+
+export interface StockHistoryEntry {
+  action: MovementType;
+  quantity: number;
+  previousQuantity: number;
+  newQuantity: number;
+  userId: string;
+  reason: string;
+  notes?: string;
+  timestamp: string;
+}
+
+export interface ItemStockHistory {
+  recentHistory: StockHistoryEntry[];
+  movements: StockMovement[];
+}
+
+export interface ItemStockStats {
+  currentStock: number;
+  totalStockIn: number;
+  totalStockOut: number;
+  inTransactions: number;
+  outTransactions: number;
+  averageDailyUsage: number;
+  daysUntilStockout: number;
+  recentActivity: {
+    _id: string;
+    totalIn: number;
+    totalOut: number;
+  }[];
+  lastRestockDate?: string;
+  lastSaleDate?: string;
+}
+
+export interface MovementFilters {
+  itemId?: string;
+  userId?: string;
+  type?: MovementType;
+  reason?: MovementReason;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  page?: number;
 }
 
 // Get auth token from localStorage or cookies
@@ -266,52 +366,336 @@ export const itemsApi = {
 
 // Stock endpoints
 export const stockApi = {
-  async addStock(itemId: string, quantity: number, reason: string, notes: string = '') {
-    return apiRequest('/stock/add', {
+  /**
+   * Add stock to an item
+   */
+  async addStock(
+    itemId: string, 
+    quantity: number, 
+    reason: MovementReason, 
+    notes: string = '',
+    options?: { referenceNumber?: string; metadata?: Record<string, any> }
+  ) {
+    return apiRequest<ApiResponse<StockOperationResult>>('/stock/add', {
       method: 'POST',
-      body: JSON.stringify({ itemId, quantity, reason, notes }),
+      body: JSON.stringify({ 
+        itemId, 
+        quantity, 
+        reason, 
+        notes,
+        referenceNumber: options?.referenceNumber,
+        metadata: options?.metadata,
+      }),
     });
   },
 
-  async removeStock(itemId: string, quantity: number, reason: string, notes: string = '') {
-    return apiRequest('/stock/remove', {
+  /**
+   * Remove stock from an item
+   */
+  async removeStock(
+    itemId: string, 
+    quantity: number, 
+    reason: MovementReason, 
+    notes: string = '',
+    options?: { referenceNumber?: string; metadata?: Record<string, any> }
+  ) {
+    return apiRequest<ApiResponse<StockOperationResult>>('/stock/remove', {
       method: 'POST',
-      body: JSON.stringify({ itemId, quantity, reason, notes }),
+      body: JSON.stringify({ 
+        itemId, 
+        quantity, 
+        reason, 
+        notes,
+        referenceNumber: options?.referenceNumber,
+        metadata: options?.metadata,
+      }),
     });
   },
 
-  async getMovements(itemId?: string) {
-    const endpoint = itemId ? `/stock/movements?itemId=${itemId}` : '/stock/movements';
-    return apiRequest(endpoint);
+  /**
+   * Adjust stock (positive or negative correction)
+   */
+  async adjustStock(
+    itemId: string,
+    adjustment: number,
+    reason: MovementReason = 'correction',
+    notes: string = '',
+    referenceNumber?: string
+  ) {
+    return apiRequest<ApiResponse<StockOperationResult>>('/stock/adjust', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, adjustment, reason, notes, referenceNumber }),
+    });
   },
 
+  /**
+   * Bulk add stock to multiple items in one transaction
+   */
+  async bulkAddStock(operations: {
+    itemId: string;
+    quantity: number;
+    reason: MovementReason;
+    notes?: string;
+    referenceNumber?: string;
+  }[]) {
+    return apiRequest<ApiResponse<StockOperationResult[]>>('/stock/bulk-add', {
+      method: 'POST',
+      body: JSON.stringify({ operations }),
+    });
+  },
+
+  /**
+   * Get stock movements with filtering and pagination
+   */
+  async getMovements(filters?: MovementFilters) {
+    const params = new URLSearchParams();
+    if (filters?.itemId) params.append('itemId', filters.itemId);
+    if (filters?.userId) params.append('userId', filters.userId);
+    if (filters?.type) params.append('type', filters.type);
+    if (filters?.reason) params.append('reason', filters.reason);
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.page) params.append('page', filters.page.toString());
+
+    const queryString = params.toString();
+    const endpoint = queryString ? `/stock/movements?${queryString}` : '/stock/movements';
+    
+    return apiRequest<ApiResponse<StockMovement[]>>(endpoint);
+  },
+
+  /**
+   * Get stock history for a specific item
+   */
+  async getItemHistory(itemId: string, limit?: number) {
+    const endpoint = limit 
+      ? `/stock/history/${itemId}?limit=${limit}` 
+      : `/stock/history/${itemId}`;
+    return apiRequest<ApiResponse<ItemStockHistory>>(endpoint);
+  },
+
+  /**
+   * Get stock statistics for a specific item
+   */
+  async getItemStats(itemId: string) {
+    return apiRequest<ApiResponse<ItemStockStats>>(`/stock/stats/${itemId}`);
+  },
+
+  /**
+   * Quick update stock (simple adjustment)
+   */
   async quickUpdate(id: string, stock: number) {
-    return apiRequest<{ data: ApiInventoryItem }>(`/stock/quick-update/${id}`, {
+    return apiRequest<ApiResponse<ApiInventoryItem>>(`/stock/quick-update/${id}`, {
       method: 'PUT',
       body: JSON.stringify({ stock }),
     });
   },
 };
 
+// Analytics types
+export interface InventoryReportItem {
+  _id: string;
+  name: string;
+  sku?: string;
+  category: string;
+  quantity: number;
+  unitPrice: number;
+  totalValue: number;
+  lowStockThreshold: number;
+  isLowStock: boolean;
+  totalStockIn: number;
+  totalStockOut: number;
+  turnoverRate: number;
+}
+
+export interface ValuationCategory {
+  category: string;
+  itemCount: number;
+  totalUnits: number;
+  totalValue: number;
+  lowStockCount: number;
+  averageItemValue: number;
+}
+
+export interface ValuationReport {
+  categories: ValuationCategory[];
+  totals: {
+    totalItems: number;
+    totalUnits: number;
+    totalValue: number;
+    totalLowStock: number;
+  };
+  generatedAt: string;
+}
+
+export interface MovementReportSummary {
+  byType: Record<string, { quantity: number; count: number }>;
+  byReason: Record<string, { quantity: number; count: number }>;
+  totalMovements: number;
+}
+
+export interface MovementReport {
+  movements: StockMovement[];
+  summary: MovementReportSummary;
+  generatedAt: string;
+}
+
+export interface TurnoverItem {
+  _id: string;
+  name: string;
+  category?: string;
+  currentStock: number;
+  stockIn: number;
+  stockOut: number;
+  dailyUsage: number;
+  daysUntilStockout: number | null;
+  turnoverRate: number;
+  velocity: 'fast' | 'slow' | 'stable';
+}
+
+export interface TurnoverAnalysis {
+  items: TurnoverItem[];
+  summary: {
+    fastMovingCount: number;
+    slowMovingCount: number;
+    stableCount: number;
+    averageTurnover: number;
+  };
+  period: string;
+  generatedAt: string;
+}
+
+export interface EnhancedDashboardStats extends DashboardStats {
+  outOfStockItems: number;
+  categoryValues: Record<string, number>;
+  totalMovements: number;
+  totalUnits: number;
+  monthlyActivity: {
+    stockIn: number;
+    stockOut: number;
+    movementsIn: number;
+    movementsOut: number;
+    netChange: number;
+  };
+  topItemsByValue: {
+    _id: string;
+    name: string;
+    value: number;
+    quantity: number;
+  }[];
+  criticalItems: {
+    _id: string;
+    name: string;
+    quantity: number;
+    threshold: number;
+    urgency: 'critical' | 'high' | 'medium';
+  }[];
+}
+
 // Analytics endpoints
 export const analyticsApi = {
+  /**
+   * Get comprehensive dashboard statistics
+   */
   async getDashboard() {
-    const response = await apiRequest<ApiResponse<DashboardStats>>('/analytics/dashboard');
+    const response = await apiRequest<ApiResponse<EnhancedDashboardStats>>('/analytics/dashboard');
     return response;
   },
 
-  async getTrends(period: string = 'month') {
+  /**
+   * Get trends with configurable period
+   */
+  async getTrends(period: 'day' | 'week' | 'month' | 'quarter' | 'year' = 'week') {
     const response = await apiRequest<ApiResponse<TrendData[]>>(`/analytics/trends?period=${period}`);
     return response;
   },
 
-  async getReport(type: string) {
-    return apiRequest(`/analytics/report?type=${type}`);
-  },
-
+  /**
+   * Get low stock alerts
+   */
   async getAlerts() {
     const response = await apiRequest<ApiResponse<Alert[]>>('/analytics/alerts');
     return { data: response.data, summary: response.summary! };
+  },
+
+  /**
+   * Get inventory report
+   */
+  async getInventoryReport(category?: string) {
+    const endpoint = category 
+      ? `/analytics/report/inventory?category=${encodeURIComponent(category)}`
+      : '/analytics/report/inventory';
+    return apiRequest<ApiResponse<InventoryReportItem[]>>(endpoint);
+  },
+
+  /**
+   * Get valuation report
+   */
+  async getValuationReport() {
+    return apiRequest<ApiResponse<ValuationReport>>('/analytics/report/valuation');
+  },
+
+  /**
+   * Get movement report
+   */
+  async getMovementReport(startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const queryString = params.toString();
+    const endpoint = queryString 
+      ? `/analytics/report/movements?${queryString}` 
+      : '/analytics/report/movements';
+    return apiRequest<ApiResponse<MovementReport>>(endpoint);
+  },
+
+  /**
+   * Get turnover analysis
+   */
+  async getTurnoverAnalysis(days: number = 30) {
+    return apiRequest<ApiResponse<TurnoverAnalysis>>(`/analytics/report/turnover?days=${days}`);
+  },
+
+  /**
+   * Legacy report endpoint
+   */
+  async getReport(type: 'inventory' | 'valuation' | 'turnover') {
+    return apiRequest(`/analytics/report?type=${type}`);
+  },
+
+  /**
+   * Get CSV export URL for inventory report
+   */
+  getInventoryExportUrl(category?: string): string {
+    const base = `${API_URL}/analytics/export/inventory/csv`;
+    return category ? `${base}?category=${encodeURIComponent(category)}` : base;
+  },
+
+  /**
+   * Get CSV export URL for valuation report
+   */
+  getValuationExportUrl(): string {
+    return `${API_URL}/analytics/export/valuation/csv`;
+  },
+
+  /**
+   * Get CSV export URL for movements report
+   */
+  getMovementsExportUrl(startDate?: string, endDate?: string): string {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const queryString = params.toString();
+    return queryString 
+      ? `${API_URL}/analytics/export/movements/csv?${queryString}`
+      : `${API_URL}/analytics/export/movements/csv`;
+  },
+
+  /**
+   * Get CSV export URL for turnover analysis
+   */
+  getTurnoverExportUrl(days: number = 30): string {
+    return `${API_URL}/analytics/export/turnover/csv?days=${days}`;
   },
 };
 
@@ -319,5 +703,230 @@ export const analyticsApi = {
 export const healthApi = {
   async check() {
     return apiRequest('/health');
+  },
+};
+
+// AI Forecasting types
+export interface DemandPrediction {
+  itemId: string;
+  itemName: string;
+  currentStock: number;
+  predictedDemand7Days: number;
+  predictedDemand30Days: number;
+  predictedDemand90Days: number;
+  confidenceScore: number;
+  recommendedReorderPoint: number;
+  recommendedReorderQuantity: number;
+  nextRestockDate: string | null;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  insights: string[];
+}
+
+export interface OptimizationRecommendation {
+  itemId: string;
+  itemName: string;
+  type: 'reorder' | 'reduce' | 'discontinue' | 'promote';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  reason: string;
+  suggestedAction: string;
+  potentialSavings?: number;
+}
+
+export interface InventoryOptimization {
+  totalItems: number;
+  optimizationScore: number;
+  recommendations: OptimizationRecommendation[];
+  summary: {
+    itemsNeedingReorder: number;
+    overstockedItems: number;
+    slowMovingItems: number;
+    healthyItems: number;
+  };
+}
+
+// AI endpoints
+export const aiApi = {
+  /**
+   * Predict demand for a specific item
+   */
+  async predictDemand(itemId: string) {
+    return apiRequest<ApiResponse<DemandPrediction>>(`/ai/predict/${itemId}`);
+  },
+
+  /**
+   * Batch predict demand for all items
+   */
+  async batchPredictDemand() {
+    return apiRequest<ApiResponse<DemandPrediction[]>>('/ai/predict-all');
+  },
+
+  /**
+   * Get AI-powered inventory optimization recommendations
+   */
+  async getOptimizationRecommendations() {
+    return apiRequest<ApiResponse<InventoryOptimization>>('/ai/optimize');
+  },
+};
+
+// Supplier types
+export interface Supplier {
+  _id: string;
+  name: string;
+  code: string;
+  email?: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  };
+  contactPerson?: string;
+  website?: string;
+  status: 'active' | 'inactive' | 'pending';
+  rating: number;
+  leadTimeDays: number;
+  minimumOrderValue: number;
+  categories: string[];
+  notes?: string;
+  paymentTerms?: {
+    method?: string;
+    netDays?: number;
+    currency?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupplierFilters {
+  search?: string;
+  status?: string;
+  category?: string;
+  page?: number;
+  limit?: number;
+}
+
+// Suppliers endpoints
+export const suppliersApi = {
+  async getAll(filters?: SupplierFilters) {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+
+    const queryString = params.toString();
+    const endpoint = queryString ? `/suppliers?${queryString}` : '/suppliers';
+    return apiRequest<ApiResponse<Supplier[]>>(endpoint);
+  },
+
+  async getById(id: string) {
+    return apiRequest<ApiResponse<Supplier>>(`/suppliers/${id}`);
+  },
+
+  async getActive() {
+    return apiRequest<ApiResponse<Supplier[]>>('/suppliers/active');
+  },
+
+  async getByCategory(category: string) {
+    return apiRequest<ApiResponse<Supplier[]>>(`/suppliers/by-category/${encodeURIComponent(category)}`);
+  },
+
+  async create(data: Partial<Supplier>) {
+    return apiRequest<ApiResponse<Supplier>>('/suppliers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(id: string, data: Partial<Supplier>) {
+    return apiRequest<ApiResponse<Supplier>>(`/suppliers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async delete(id: string) {
+    return apiRequest<ApiResponse<null>>(`/suppliers/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// WebSocket connection helper
+export const createWebSocketConnection = () => {
+  if (typeof window === 'undefined') return null;
+  
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || (
+    typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+      ? '' // Must be configured for production
+      : 'http://localhost:5000/ws'
+  );
+  
+  // Dynamic import for socket.io-client
+  return import('socket.io-client').then(({ io }) => {
+    const socket = io(wsUrl, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+    });
+
+    return {
+      socket,
+      
+      authenticate: (userId: string, role: string) => {
+        socket.emit('authenticate', { userId, role });
+      },
+
+      subscribeToItem: (itemId: string) => {
+        socket.emit('subscribe_item', itemId);
+      },
+
+      unsubscribeFromItem: (itemId: string) => {
+        socket.emit('unsubscribe_item', itemId);
+      },
+
+      onStockUpdate: (callback: (data: any) => void) => {
+        socket.on('stock_update', callback);
+        return () => socket.off('stock_update', callback);
+      },
+
+      onAlert: (callback: (data: any) => void) => {
+        socket.on('alert', callback);
+        return () => socket.off('alert', callback);
+      },
+
+      onNotification: (callback: (data: any) => void) => {
+        socket.on('notification', callback);
+        return () => socket.off('notification', callback);
+      },
+
+      onDashboardUpdate: (callback: (data: any) => void) => {
+        socket.on('dashboard_update', callback);
+        return () => socket.off('dashboard_update', callback);
+      },
+
+      disconnect: () => {
+        socket.disconnect();
+      },
+    };
+  });
+};
+
+// Notifications endpoints
+export const notificationsApi = {
+  async sendTestNotification(message?: string) {
+    return apiRequest<ApiResponse<null>>('/notifications/test', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  },
+
+  async sendTestEmail(email: string) {
+    return apiRequest<ApiResponse<{ success: boolean }>>('/notifications/test-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
   },
 };

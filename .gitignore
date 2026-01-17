@@ -75,3 +75,8 @@ uploads/
 # temporary files
 *.tmp
 *.temp
+
+# Environment files
+backend/.env
+backend/.env.production
+.env.production

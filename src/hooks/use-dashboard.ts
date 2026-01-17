@@ -28,7 +28,7 @@ export function useDashboard(options: UseDashboardOptions = {}) {
     try {
       const [statsRes, trendsRes, alertsRes] = await Promise.all([
         analyticsApi.getDashboard(),
-        analyticsApi.getTrends('7d'),
+        analyticsApi.getTrends('week'),
         analyticsApi.getAlerts(),
       ]);
 
