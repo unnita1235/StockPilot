@@ -3,6 +3,33 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
+// User roles enum
+export enum UserRole {
+    ADMIN = 'admin',
+    MANAGER = 'manager',
+    STAFF = 'staff',
+    VIEWER = 'viewer',
+}
+
+// Role-based permissions
+export const ROLE_PERMISSIONS: Record<UserRole, readonly string[]> = {
+    [UserRole.ADMIN]: [
+        'create_item', 'read_item', 'update_item', 'delete_item',
+        'add_stock', 'remove_stock', 'view_reports', 'manage_users',
+        'manage_settings', 'view_analytics', 'export_data'
+    ],
+    [UserRole.MANAGER]: [
+        'create_item', 'read_item', 'update_item',
+        'add_stock', 'remove_stock', 'view_reports', 'view_analytics', 'export_data'
+    ],
+    [UserRole.STAFF]: [
+        'read_item', 'update_item', 'add_stock', 'remove_stock'
+    ],
+    [UserRole.VIEWER]: [
+        'read_item'
+    ],
+} as const;
+
 @Schema({ timestamps: true })
 export class User {
     @Prop({ required: true })
@@ -13,6 +40,9 @@ export class User {
 
     @Prop({ required: true })
     password: string;
+
+    @Prop({ type: String, enum: UserRole, default: UserRole.STAFF })
+    role: UserRole;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -3,6 +3,7 @@ import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../auth/user.schema';
 import { createResponse } from '../common/api-response';
 
 @Controller('notifications')
@@ -12,7 +13,7 @@ export class NotificationsController {
 
     @Post('test')
     @UseGuards(RolesGuard)
-    @Roles('admin')
+    @Roles(UserRole.ADMIN)
     async sendTestNotification(@Request() req, @Body() body: { message?: string }) {
         await this.notificationsService.sendNotification({
             userId: req.user.userId,
@@ -25,7 +26,7 @@ export class NotificationsController {
 
     @Post('test-email')
     @UseGuards(RolesGuard)
-    @Roles('admin')
+    @Roles(UserRole.ADMIN)
     async sendTestEmail(@Body() body: { email: string }) {
         const success = await this.notificationsService.sendEmail({
             to: body.email,
