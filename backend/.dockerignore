@@ -3,8 +3,12 @@ dist
 .git
 .gitignore
 *.md
-.env*
+.env
+.env.local
+.env.example
 test
 coverage
-.eslintrc.js
+.eslintrc.json
 .prettierrc
+*.log
+.DS_Store
