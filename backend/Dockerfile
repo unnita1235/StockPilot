@@ -1,3 +1,4 @@
+# StockPilot Backend - NestJS Production Build
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -15,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
