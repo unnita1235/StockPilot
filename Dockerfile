@@ -5,13 +5,15 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+
+# Install dependencies (skip prepare script/husky)
+RUN npm ci --ignore-scripts
+
+# Copy config files
 COPY next.config.ts ./
 COPY tailwind.config.ts ./
 COPY postcss.config.mjs ./
 COPY tsconfig.json ./
-
-# Install dependencies
-RUN npm ci
 
 # Copy source code
 COPY src ./src
@@ -27,9 +29,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package files and install production dependencies
+# Copy package files and install production dependencies (skip prepare script)
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --only=production --ignore-scripts
 
 # Copy built application from builder
 COPY --from=frontend-builder /app/.next ./.next
@@ -37,7 +39,6 @@ COPY --from=frontend-builder /app/public ./public
 COPY --from=frontend-builder /app/next.config.ts ./next.config.ts
 COPY --from=frontend-builder /app/package.json ./package.json
 
-EXPOSE 9002
+EXPOSE 3000
 
 CMD ["npm", "start"]
-
