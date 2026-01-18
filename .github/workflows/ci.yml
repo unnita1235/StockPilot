@@ -1,0 +1,63 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [., backend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+      - name: Install dependencies
+        run: cd ${{ matrix.dir }} && npm ci
+      - name: Lint
+        run: cd ${{ matrix.dir }} && npm run lint
+      - name: Test
+        run: cd ${{ matrix.dir }} && npm test
+      - name: Security audit
+        run: cd ${{ matrix.dir }} && npm audit --audit-level=high
+        continue-on-error: true
+
+  secret-scanning:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets
+        run: |
+          # Simple secret scanning using grep patterns
+          echo "🔍 Scanning for exposed secrets..."
+          
+          # Define patterns to check (these should NOT be found in code)
+          PATTERNS=(
+            "mongodb\+srv://[^:]+:[^@]+@"
+            "sk-[a-zA-Z0-9]{48}"
+            "ghp_[a-zA-Z0-9]{36}"
+            "AKIA[0-9A-Z]{16}"
+          )
+          
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            # Exclude .env.example files and this workflow file
+            MATCHES=$(git grep -l -E "$pattern" -- ':!*.example' ':!.github/workflows/*' 2>/dev/null || true)
+            if [ -n "$MATCHES" ]; then
+              echo "❌ Potential secret found matching pattern: $pattern in files: $MATCHES"
+              FOUND=1
+            fi
+          done
+          
+          if [ $FOUND -eq 1 ]; then
+            echo "🚫 Secret scanning failed!"
+            exit 1
+          fi
+          
+          echo "✅ No secrets detected"

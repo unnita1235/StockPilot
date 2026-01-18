@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: stockpilot-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: stockpilot
+    networks:
+      - stockpilot-network
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: stockpilot-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://mongodb:27017/stockpilot
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:9002
+    depends_on:
+      - mongodb
+    networks:
+      - stockpilot-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stockpilot-frontend
+    restart: unless-stopped
+    ports:
+      - "9002:9002"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    depends_on:
+      - backend
+    networks:
+      - stockpilot-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  stockpilot-network:
+    driver: bridge
+

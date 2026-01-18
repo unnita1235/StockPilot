@@ -1,0 +1,10 @@
+{
+  "placeholderImages": [
+    {
+      "id": "logo",
+      "description": "StockPilot application logo",
+      "imageUrl": "https://picsum.photos/seed/stockpilot/100/100",
+      "imageHint": "box cube"
+    }
+  ]
+}
