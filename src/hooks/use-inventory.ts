@@ -6,16 +6,17 @@ import { itemsApi, stockApi, ApiInventoryItem } from '@/lib/api';
 
 // Transform API item to frontend format
 function transformItem(item: ApiInventoryItem): InventoryItem {
+  const anyItem: any = item as any;
   return {
-    id: item._id,
-    name: item.name,
-    description: item.description,
-    stock: item.stock,
-    category: item.category as InventoryCategory,
-    lowStockThreshold: item.lowStockThreshold,
-    sku: item.sku,
-    unitPrice: item.unitPrice,
-    isLowStock: item.isLowStock,
+    id: (anyItem._id || anyItem.id) as string,
+    name: anyItem.name,
+    description: anyItem.description || '',
+    stock: (anyItem.stock ?? anyItem.quantity ?? 0) as number,
+    category: anyItem.category as InventoryCategory,
+    lowStockThreshold: (anyItem.lowStockThreshold ?? 0) as number,
+    sku: anyItem.sku,
+    unitPrice: anyItem.unitPrice,
+    isLowStock: anyItem.isLowStock ?? ((anyItem.stock ?? anyItem.quantity ?? 0) <= (anyItem.lowStockThreshold ?? 0)),
   };
 }
 
@@ -66,10 +67,11 @@ export function useInventory(options: UseInventoryOptions = {}) {
         const response = await itemsApi.create({
           name: itemData.name,
           description: itemData.description,
-          stock: itemData.stock,
-          category: itemData.category,
-          lowStockThreshold: itemData.lowStockThreshold,
-        });
+          // Backend expects quantity; map from stock
+          quantity: itemData.stock as any,
+          category: itemData.category as any,
+          lowStockThreshold: itemData.lowStockThreshold as any,
+        } as any);
         const newItem = transformItem(response.data);
         setItems(prev => [newItem, ...prev]);
         return newItem;

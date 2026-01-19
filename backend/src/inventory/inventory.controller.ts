@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { createResponse } from '../common/api-response';
+import { RequestWithTenant } from '../tenant/tenant.middleware';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard)
@@ -8,22 +10,37 @@ export class InventoryController {
     constructor(private readonly inventoryService: InventoryService) { }
 
     @Get()
-    findAll() {
-        return this.inventoryService.findAll();
+    async findAll(@Request() req: RequestWithTenant) {
+        const tenantId = req.tenant?._id;
+        const data = await this.inventoryService.findAll(tenantId);
+        return createResponse(data);
     }
 
     @Post()
-    create(@Body() dto: any) {
-        return this.inventoryService.create(dto);
+    async create(@Body() dto: any, @Request() req: RequestWithTenant) {
+        const tenantId = req.tenant?._id;
+        const data = await this.inventoryService.create(dto, tenantId);
+        return createResponse(data, 'Item created');
+    }
+
+    @Get(':id')
+    async findOne(@Param('id') id: string, @Request() req: RequestWithTenant) {
+        const tenantId = req.tenant?._id;
+        const data = await this.inventoryService.findOne(id, tenantId);
+        return createResponse(data);
     }
 
     @Put(':id')
-    update(@Param('id') id: string, @Body() dto: any) {
-        return this.inventoryService.update(id, dto);
+    async update(@Param('id') id: string, @Body() dto: any, @Request() req: RequestWithTenant) {
+        const tenantId = req.tenant?._id;
+        const data = await this.inventoryService.update(id, dto, tenantId);
+        return createResponse(data, 'Item updated');
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.inventoryService.remove(id);
+    async remove(@Param('id') id: string, @Request() req: RequestWithTenant) {
+        const tenantId = req.tenant?._id;
+        await this.inventoryService.remove(id, tenantId);
+        return createResponse(null as any, 'Item deleted');
     }
 }

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
 
@@ -32,6 +32,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly string[]> = {
 
 @Schema({ timestamps: true })
 export class User {
+    @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true })
+    tenantId: Types.ObjectId;
+
     @Prop({ required: true })
     name: string;
 
@@ -46,3 +49,6 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Index for tenant-scoped user queries
+UserSchema.index({ tenantId: 1, email: 1 });

@@ -1,38 +1,128 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { StockRepository } from './stock.repository';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Inventory, InventoryDocument } from '../inventory/inventory.schema';
+import { StockMovement, StockMovementDocument } from './stock.schema';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class StockService {
-  constructor(private readonly repo: StockRepository) {}
+  constructor(
+    @InjectModel(Inventory.name) private readonly inventoryModel: Model<InventoryDocument>,
+    @InjectModel(StockMovement.name) private readonly movementModel: Model<StockMovementDocument>,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
-  async moveStock(
-    stockId: string,
-    type: 'IN' | 'OUT',
-    quantity: number,
-    tenantId: string,
-    reason?: string,
-  ) {
-    if (quantity <= 0) {
-      throw new BadRequestException('Quantity must be greater than zero');
-    }
+  async addStock(itemId: string, quantity: number, reason: string, notes?: string, userId?: string) {
+    if (quantity <= 0) throw new BadRequestException('Quantity must be greater than zero');
 
-    const stock = await this.repo.findById(stockId, tenantId);
+    const item = await this.inventoryModel.findById(itemId);
+    if (!item) throw new NotFoundException('Item not found');
 
-    if (type === 'OUT' && stock.quantity < quantity) {
-      throw new BadRequestException('Insufficient stock');
-    }
+    const previousQuantity = item.quantity;
+    item.quantity = previousQuantity + quantity;
+    const updated = await item.save();
 
-    const delta = type === 'IN' ? quantity : -quantity;
+    await this.movementModel.create({ itemId, type: 'IN', quantity, reason, notes, userId });
 
-    const updated = await this.repo.incrementQuantity(stockId, delta);
-
-    await this.repo.logMovement({
-      stockId,
-      tenantId,
-      type,
-      quantity,
-      reason,
+    // Emit real-time notification
+    await this.notificationsService.sendStockUpdateNotification({
+      type: 'stock_added',
+      itemId: item._id.toString(),
+      itemName: item.name,
+      previousQuantity,
+      newQuantity: updated.quantity,
+      userId: userId || 'system',
     });
+
+    return { previousQuantity, updated };
+  }
+
+  async removeStock(itemId: string, quantity: number, reason: string, notes?: string, userId?: string) {
+    if (quantity <= 0) throw new BadRequestException('Quantity must be greater than zero');
+
+    const item = await this.inventoryModel.findById(itemId);
+    if (!item) throw new NotFoundException('Item not found');
+
+    const previousQuantity = item.quantity;
+    if (previousQuantity < quantity) throw new BadRequestException('Insufficient stock');
+
+    item.quantity = previousQuantity - quantity;
+    const updated = await item.save();
+
+    await this.movementModel.create({ itemId, type: 'OUT', quantity, reason, notes, userId });
+
+    // Emit real-time notification
+    await this.notificationsService.sendStockUpdateNotification({
+      type: 'stock_removed',
+      itemId: item._id.toString(),
+      itemName: item.name,
+      previousQuantity,
+      newQuantity: updated.quantity,
+      userId: userId || 'system',
+    });
+
+    // Check for low stock alert
+    if (updated.quantity <= (item.lowStockThreshold || 0)) {
+      await this.notificationsService.sendLowStockAlert({
+        _id: item._id.toString(),
+        name: item.name,
+        quantity: updated.quantity,
+        lowStockThreshold: item.lowStockThreshold || 0,
+      });
+    }
+
+    return { previousQuantity, updated };
+  }
+
+  async getMovements(itemId?: string) {
+    const filter: any = {};
+    if (itemId) filter.itemId = itemId;
+    return this.movementModel.find(filter).sort({ createdAt: -1 }).limit(100).exec();
+  }
+
+  async quickUpdate(itemId: string, newStock: number, userId?: string) {
+    if (newStock < 0) throw new BadRequestException('Stock cannot be negative');
+
+    const item = await this.inventoryModel.findById(itemId);
+    if (!item) throw new NotFoundException('Item not found');
+
+    const previousQuantity = item.quantity;
+    item.quantity = newStock;
+    const updated = await item.save();
+
+    // Record adjustment movement
+    const adjustmentQty = newStock - previousQuantity;
+    if (adjustmentQty !== 0) {
+      await this.movementModel.create({
+        itemId,
+        type: 'ADJUST',
+        quantity: Math.abs(adjustmentQty),
+        reason: 'Quick update adjustment',
+        notes: `Changed from ${previousQuantity} to ${newStock}`,
+        userId,
+      });
+
+      // Emit real-time notification
+      await this.notificationsService.sendStockUpdateNotification({
+        type: 'stock_adjusted',
+        itemId: item._id.toString(),
+        itemName: item.name,
+        previousQuantity,
+        newQuantity: newStock,
+        userId: userId || 'system',
+      });
+
+      // Check for low stock alert
+      if (newStock <= (item.lowStockThreshold || 0)) {
+        await this.notificationsService.sendLowStockAlert({
+          _id: item._id.toString(),
+          name: item.name,
+          quantity: newStock,
+          lowStockThreshold: item.lowStockThreshold || 0,
+        });
+      }
+    }
 
     return updated;
   }

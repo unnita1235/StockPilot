@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-@Controller('api/tenants')
+@Controller('tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TenantController {
     constructor(private readonly tenantService: TenantService) {}

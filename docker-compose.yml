@@ -1,5 +1,8 @@
 version: '3.8'
 
+# Local development docker-compose
+# For production, use Railway (backend) + Vercel (frontend)
+
 services:
   mongodb:
     image: mongo:7
@@ -16,23 +19,27 @@ services:
 
   backend:
     build:
-      context: ./server
+      context: ./backend
       dockerfile: Dockerfile
     container_name: stockpilot-backend
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "5000:5000"
     environment:
-      NODE_ENV: production
-      PORT: 3001
+      NODE_ENV: development
+      PORT: 5000
       MONGODB_URI: mongodb://mongodb:27017/stockpilot
-      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
-      JWT_EXPIRES_IN: 7d
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-in-production}
       FRONTEND_URL: http://localhost:9002
     depends_on:
       - mongodb
     networks:
       - stockpilot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   frontend:
     build:
@@ -43,8 +50,8 @@ services:
     ports:
       - "9002:9002"
     environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api
     depends_on:
       - backend
     networks:

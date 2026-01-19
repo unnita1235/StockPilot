@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { WebsocketGateway } from '../websocket/websocket.gateway';
+import { Resend } from 'resend';
 
 export interface NotificationPayload {
     userId?: string;
@@ -10,7 +11,7 @@ export interface NotificationPayload {
 }
 
 export interface EmailPayload {
-    to: string;
+    to: string | string[];
     subject: string;
     body: string;
     html?: string;
@@ -22,10 +23,21 @@ export interface SmsPayload {
 }
 
 @Injectable()
-export class NotificationsService {
+export class NotificationsService implements OnModuleInit {
     private logger = new Logger('NotificationsService');
+    private resend: Resend | null = null;
+    private fromEmail = 'StockPilot <notifications@stockpilot.com>';
 
     constructor(private readonly wsGateway: WebsocketGateway) { }
+
+    onModuleInit() {
+        if (process.env.RESEND_API_KEY) {
+            this.resend = new Resend(process.env.RESEND_API_KEY);
+            this.logger.log('Resend email service initialized');
+        } else {
+            this.logger.warn('RESEND_API_KEY not set - email notifications disabled');
+        }
+    }
 
     /**
      * Send real-time notification via WebSocket
@@ -46,14 +58,14 @@ export class NotificationsService {
     }
 
     /**
-     * Send low stock alert
+     * Send low stock alert (WebSocket + optional email)
      */
     async sendLowStockAlert(item: {
         _id: string;
         name: string;
         quantity: number;
         lowStockThreshold: number;
-    }): Promise<void> {
+    }, alertEmail?: string): Promise<void> {
         const severity: 'critical' | 'warning' | 'info' = item.quantity === 0 ? 'critical' : 
                         item.quantity <= item.lowStockThreshold / 2 ? 'critical' : 'warning';
 
@@ -70,14 +82,70 @@ export class NotificationsService {
             timestamp: new Date().toISOString(),
         };
 
+        // Broadcast via WebSocket
         this.wsGateway.broadcastAlert(alertEvent);
 
-        // Also send as notification
+        // Also send as in-app notification
         await this.sendNotification({
             type: severity === 'critical' ? 'error' : 'warning',
             title: item.quantity === 0 ? 'Out of Stock!' : 'Low Stock Alert',
             message: alertEvent.message,
             data: { itemId: item._id, currentStock: item.quantity },
+        });
+
+        // Send email for critical alerts
+        if (severity === 'critical' && alertEmail) {
+            await this.sendLowStockEmailAlert(item, alertEmail);
+        }
+    }
+
+    /**
+     * Send immediate email alert for critical low stock
+     */
+    async sendLowStockEmailAlert(item: {
+        _id: string;
+        name: string;
+        quantity: number;
+        lowStockThreshold: number;
+    }, email: string): Promise<boolean> {
+        const isCritical = item.quantity === 0;
+        const subject = isCritical 
+            ? `🚨 URGENT: ${item.name} is OUT OF STOCK`
+            : `⚠️ Low Stock Alert: ${item.name}`;
+
+        return this.sendEmail({
+            to: email,
+            subject,
+            body: `${item.name} requires immediate attention. Current stock: ${item.quantity} units (threshold: ${item.lowStockThreshold})`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: ${isCritical ? '#dc2626' : '#f59e0b'}; color: white; padding: 20px; text-align: center;">
+                        <h1 style="margin: 0;">${isCritical ? '🚨 OUT OF STOCK' : '⚠️ LOW STOCK ALERT'}</h1>
+                    </div>
+                    <div style="padding: 20px; background: #f9fafb;">
+                        <h2 style="color: #111827;">${item.name}</h2>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Current Stock:</strong></td>
+                                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: ${isCritical ? '#dc2626' : '#f59e0b'}; font-weight: bold;">${item.quantity} units</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>Threshold:</strong></td>
+                                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.lowStockThreshold} units</td>
+                            </tr>
+                        </table>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <a href="${process.env.FRONTEND_URL || 'https://stock-pilot-wheat.vercel.app'}/inventory/${item._id}" 
+                               style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                                View Item Details
+                            </a>
+                        </div>
+                    </div>
+                    <div style="padding: 15px; background: #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
+                        This is an automated alert from StockPilot Inventory Management
+                    </div>
+                </div>
+            `,
         });
     }
 
@@ -102,34 +170,36 @@ export class NotificationsService {
     }
 
     /**
-     * Send email notification (placeholder - integrate with Resend/SendGrid)
+     * Send email notification via Resend
      */
     async sendEmail(payload: EmailPayload): Promise<boolean> {
-        // TODO: Integrate with email service (Resend, SendGrid, etc.)
-        // Example with Resend:
-        // const resend = new Resend(process.env.RESEND_API_KEY);
-        // await resend.emails.send({
-        //     from: 'StockPilot <notifications@stockpilot.com>',
-        //     to: payload.to,
-        //     subject: payload.subject,
-        //     html: payload.html || payload.body,
-        // });
-
-        this.logger.log(`Email would be sent to ${payload.to}: ${payload.subject}`);
+        const recipients = Array.isArray(payload.to) ? payload.to : [payload.to];
         
-        // For now, just log
-        if (process.env.RESEND_API_KEY) {
-            try {
-                // Actual email sending would go here
-                this.logger.log(`Email sent to ${payload.to}`);
-                return true;
-            } catch (error) {
-                this.logger.error(`Failed to send email: ${error}`);
+        if (!this.resend) {
+            this.logger.warn(`Email not sent (Resend not configured): ${payload.subject} to ${recipients.join(', ')}`);
+            return false;
+        }
+
+        try {
+            const { data, error } = await this.resend.emails.send({
+                from: this.fromEmail,
+                to: recipients,
+                subject: payload.subject,
+                html: payload.html || `<p>${payload.body}</p>`,
+                text: payload.body,
+            });
+
+            if (error) {
+                this.logger.error(`Failed to send email: ${JSON.stringify(error)}`);
                 return false;
             }
+
+            this.logger.log(`Email sent successfully to ${recipients.join(', ')} (ID: ${data?.id})`);
+            return true;
+        } catch (error) {
+            this.logger.error(`Failed to send email: ${error}`);
+            return false;
         }
-        
-        return true; // Return true for dev mode
     }
 
     /**

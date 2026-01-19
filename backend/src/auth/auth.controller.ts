@@ -15,7 +15,11 @@ export class AuthController {
         const result = await this.authService.register(body.email, body.password, body.name);
         this.setCookie(res, result.token);
         return res.status(HttpStatus.CREATED).json({
-            user: result.user,
+            success: true,
+            data: {
+                user: result.user,
+                token: result.token,
+            },
             message: 'Registration successful'
         });
     }
@@ -28,7 +32,11 @@ export class AuthController {
         const result = await this.authService.login(body.email, body.password);
         this.setCookie(res, result.token);
         return res.status(HttpStatus.OK).json({
-            user: result.user,
+            success: true,
+            data: {
+                user: result.user,
+                token: result.token,
+            },
             message: 'Login successful'
         });
     }

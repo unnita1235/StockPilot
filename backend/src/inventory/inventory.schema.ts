@@ -1,10 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type InventoryDocument = Inventory & Document;
 
 @Schema({ timestamps: true })
 export class Inventory {
+    @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true })
+    tenantId: Types.ObjectId;
+
     @Prop({ required: true })
     name: string;
 
@@ -28,3 +31,7 @@ export class Inventory {
 }
 
 export const InventorySchema = SchemaFactory.createForClass(Inventory);
+
+// Compound index for tenant-scoped queries
+InventorySchema.index({ tenantId: 1, category: 1 });
+InventorySchema.index({ tenantId: 1, name: 1 });

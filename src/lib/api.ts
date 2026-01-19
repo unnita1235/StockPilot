@@ -75,13 +75,14 @@ export interface AlertSummary {
 export interface ApiInventoryItem {
   _id: string;
   name: string;
-  description: string;
-  stock: number;
+  description?: string;
+  stock?: number; // frontend convenience
+  quantity?: number; // backend canonical
   category: string;
   lowStockThreshold: number;
   sku?: string;
   unitPrice?: number;
-  isLowStock: boolean;
+  isLowStock?: boolean;
 }
 
 // Get auth token from localStorage or cookies
