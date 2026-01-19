@@ -1,56 +1,39 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { StockMovement, StockMovementDocument } from './stock.schema';
-import { Inventory, InventoryDocument } from '../inventory/inventory.schema';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { StockRepository } from './stock.repository';
 
 @Injectable()
 export class StockService {
-    constructor(
-        @InjectModel(StockMovement.name) private stockModel: Model<StockMovementDocument>,
-        @InjectModel(Inventory.name) private inventoryModel: Model<InventoryDocument>,
-    ) { }
+  constructor(private readonly repo: StockRepository) {}
 
-    async addStock(itemId: string, quantity: number, reason: string, notes: string = '') {
-        const item = await this.inventoryModel.findById(itemId);
-        if (!item) throw new NotFoundException('Item not found');
-
-        item.quantity += quantity;
-        await item.save();
-
-        const movement = new this.stockModel({
-            itemId,
-            type: 'IN',
-            quantity,
-            reason,
-            notes,
-        });
-        return movement.save();
+  async moveStock(
+    stockId: string,
+    type: 'IN' | 'OUT',
+    quantity: number,
+    tenantId: string,
+    reason?: string,
+  ) {
+    if (quantity <= 0) {
+      throw new BadRequestException('Quantity must be greater than zero');
     }
 
-    async removeStock(itemId: string, quantity: number, reason: string, notes: string = '') {
-        const item = await this.inventoryModel.findById(itemId);
-        if (!item) throw new NotFoundException('Item not found');
+    const stock = await this.repo.findById(stockId, tenantId);
 
-        if (item.quantity < quantity) {
-            throw new Error('Insufficient stock');
-        }
-
-        item.quantity -= quantity;
-        await item.save();
-
-        const movement = new this.stockModel({
-            itemId,
-            type: 'OUT',
-            quantity,
-            reason,
-            notes,
-        });
-        return movement.save();
+    if (type === 'OUT' && stock.quantity < quantity) {
+      throw new BadRequestException('Insufficient stock');
     }
 
-    async getMovements(itemId?: string) {
-        const filter = itemId ? { itemId } : {};
-        return this.stockModel.find(filter).sort({ createdAt: -1 }).populate('itemId', 'name').exec();
-    }
+    const delta = type === 'IN' ? quantity : -quantity;
+
+    const updated = await this.repo.incrementQuantity(stockId, delta);
+
+    await this.repo.logMovement({
+      stockId,
+      tenantId,
+      type,
+      quantity,
+      reason,
+    });
+
+    return updated;
+  }
 }
