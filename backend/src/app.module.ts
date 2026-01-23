@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -92,6 +92,11 @@ import { UploadModule } from './upload/upload.module';
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(TenantMiddleware).forRoutes('*');
+        consumer.apply(TenantMiddleware)
+            .exclude(
+                { path: 'api/health', method: RequestMethod.ALL },
+                { path: 'health', method: RequestMethod.ALL }
+            )
+            .forRoutes('*');
     }
 }
