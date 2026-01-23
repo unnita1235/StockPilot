@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   try {
@@ -63,6 +64,12 @@ async function bootstrap() {
 
     // Set global prefix for API routes
     app.setGlobalPrefix('api');
+
+      // Setup Swagger/OpenAPI Documentation
+  const swaggerConfig = new DocumentBuilder().setTitle('StockPilot API').setDescription('Inventory Management System').setVersion('1.0').addBearerAuth().build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api-docs', app, document);
+  console.log('📚 Swagger documentation available at: /api-docs');
 
     const port = process.env.PORT || 3000;
     await app.listen(port, '0.0.0.0');
