@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsEnum, IsOptional, IsMongoId, NotEquals } from 'class-validator';
+import { IsString, IsNumber, IsEnum, IsOptional, NotEquals } from 'class-validator';
 import { StockMovementType } from '../stock-movement.schema';
 
 export class CreateStockMovementDto {
