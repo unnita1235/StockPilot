@@ -5,6 +5,8 @@ import { InventoryItem, InventoryCategory } from '@/lib/data';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { InventoryActions } from '@/components/inventory/inventory-actions';
 import { InventoryTable } from '@/components/inventory/inventory-table';
+import { InventoryCard } from '@/components/inventory/inventory-card';
+import { ViewToggle } from '@/components/inventory/view-toggle';
 import { ItemFormDialog } from '@/components/inventory/item-form-dialog';
 import { DeleteItemDialog } from '@/components/inventory/delete-item-dialog';
 import { LowStockAnalyzerDialog } from '@/components/inventory/low-stock-analyzer-dialog';
@@ -41,6 +43,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<InventoryCategory | 'All'>('All');
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'closed' });
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const { toast } = useToast();
 
   const handleSearchChange = (query: string) => {
