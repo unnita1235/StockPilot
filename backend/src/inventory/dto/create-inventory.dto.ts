@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, Min, IsArray, IsUrl } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, IsArray } from 'class-validator';
 
 export class CreateInventoryDto {
     @IsString()
