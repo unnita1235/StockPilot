@@ -31,9 +31,9 @@
 **Add these variables**:
 
 \\\
-MONGODB_URI = mongodb+srv://unnita1235_db_user:d0jVi074jJxqXPoQ@stockpilot.rjuxowi.mongodb.net/stockpilot?retryWrites=true&w=majority
+MONGODB_URI = mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@your-cluster.mongodb.net/your-database?retryWrites=true&w=majority
 
-JWT_SECRET = EgY37fL8XIqZCO6a4sO97eMd1I9OsM8Jz8ClTCwMHf3xDWj1Uc9BlFxh/EAm5XD8
+JWT_SECRET = YOUR_SECURE_JWT_SECRET_HERE_MINIMUM_64_CHARACTERS_LONG
 
 PORT = 5000
 
