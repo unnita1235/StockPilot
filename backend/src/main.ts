@@ -9,11 +9,11 @@ async function bootstrap() {
     console.log('Starting StockPilot Backend...');
     console.log('='.repeat(50));
     console.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
-    console.log(`PORT: ${process.env.PORT || 5000}`);
+    console.log(`PORT: ${process.env.PORT || 3000}`);
     console.log(`MONGODB_URI: ${process.env.MONGODB_URI ? 'SET (' + process.env.MONGODB_URI.substring(0, 30) + '...)' : '❌ NOT SET'}`);
     console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'SET' : '❌ NOT SET'}`);
     console.log(`FRONTEND_URL: ${process.env.FRONTEND_URL || 'not set'}`);
-    
+
     const app = await NestFactory.create(AppModule);
 
     // Security headers with Helmet
@@ -40,7 +40,7 @@ async function bootstrap() {
           callback(null, true);
           return;
         }
-        
+
         if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
@@ -64,7 +64,7 @@ async function bootstrap() {
     // Set global prefix for API routes
     app.setGlobalPrefix('api');
 
-    const port = process.env.PORT || 5000;
+    const port = process.env.PORT || 3000;
     await app.listen(port, '0.0.0.0');
     console.log(`🚀 Backend running on port ${port}`);
     console.log(`📍 Allowed origins: ${allowedOrigins.join(', ')}`);

@@ -9,7 +9,7 @@ const getSocketUrl = () => {
   if (process.env.NEXT_PUBLIC_WS_URL) {
     return process.env.NEXT_PUBLIC_WS_URL;
   }
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
   // Remove /api suffix to get base URL
   return apiUrl.replace('/api', '');
 };

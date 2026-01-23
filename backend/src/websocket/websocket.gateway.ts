@@ -42,7 +42,30 @@ export interface NotificationEvent {
 
 @WebSocketGateway({
     cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: (origin: string, callback: (err: Error | null, allow?: boolean) => void) => {
+            const allowedOrigins = [
+                process.env.FRONTEND_URL,
+                'https://stock-pilot-wheat.vercel.app',
+                'https://stockpilot.vercel.app',
+                // Only allow localhost in development
+                ...(process.env.NODE_ENV !== 'production' ? [
+                    'http://localhost:3000',
+                    'http://localhost:9002',
+                ] : []),
+            ].filter(Boolean);
+
+            // Allow requests with no origin (mobile apps, server-to-server)
+            if (!origin) {
+                callback(null, true);
+                return;
+            }
+
+            if (allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(null, false);
+            }
+        },
         credentials: true,
     },
     namespace: '/ws',
@@ -61,9 +84,9 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
     handleConnection(client: Socket) {
         this.logger.log(`Client connected: ${client.id}`);
         this.connectedClients.set(client.id, {});
-        
+
         // Send connection confirmation
-        client.emit('connected', { 
+        client.emit('connected', {
             message: 'Connected to StockPilot real-time updates',
             clientId: client.id,
         });
@@ -80,13 +103,13 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
             userId: payload.userId,
             role: payload.role,
         });
-        
+
         // Join role-based room
         client.join(`role:${payload.role}`);
         client.join(`user:${payload.userId}`);
-        
+
         this.logger.log(`Client ${client.id} authenticated as ${payload.userId} (${payload.role})`);
-        
+
         return { success: true, message: 'Authenticated successfully' };
     }
 
@@ -111,13 +134,13 @@ export class WebsocketGateway implements OnGatewayInit, OnGatewayConnection, OnG
 
     broadcastAlert(event: AlertEvent) {
         this.server.emit('alert', event);
-        
+
         // Send critical alerts to admin room
         if (event.severity === 'critical') {
             this.server.to('role:admin').emit('critical_alert', event);
             this.server.to('role:manager').emit('critical_alert', event);
         }
-        
+
         this.logger.debug(`Alert broadcast: ${event.type} for ${event.itemName}`);
     }
 

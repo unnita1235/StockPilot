@@ -18,7 +18,7 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { ReportsModule } from './reports/reports.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
-import { HealthController } from './health/health.controller';
+import { HealthModule } from './health/health.module';
 import { SeedModule } from './seed/seed.module';
 import { UploadModule } from './upload/upload.module';
 
@@ -33,6 +33,12 @@ import { UploadModule } from './upload/upload.module';
             limit: 100, // 100 requests
         }]),
         MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/stockpilot', {
+            // CRITICAL: Don't block server startup waiting for MongoDB
+            lazyConnection: true,
+            // Retry connection attempts
+            retryWrites: true,
+            retryAttempts: 5,
+            retryDelay: 3000, // 3 seconds between retries
             connectionFactory: (connection) => {
                 // Apply the tenant isolation plugin to all schemas
                 connection.plugin(tenantIsolationPlugin);
@@ -41,10 +47,14 @@ import { UploadModule } from './upload/upload.module';
                     console.log('✅ MongoDB connected successfully');
                 });
                 connection.on('error', (err) => {
+                    // Log error but DON'T crash - let app continue running
                     console.error('❌ MongoDB connection error:', err.message);
                 });
                 connection.on('disconnected', () => {
-                    console.warn('⚠️ MongoDB disconnected');
+                    console.warn('⚠️ MongoDB disconnected - will attempt to reconnect');
+                });
+                connection.on('reconnected', () => {
+                    console.log('🔄 MongoDB reconnected successfully');
                 });
                 return connection;
             },
@@ -69,8 +79,9 @@ import { UploadModule } from './upload/upload.module';
                 index: false,
             },
         }),
+        HealthModule,
     ],
-    controllers: [HealthController],
+    controllers: [],
     providers: [
         // Enable rate limiting globally
         {

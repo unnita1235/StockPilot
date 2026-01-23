@@ -35,7 +35,7 @@ RUN mkdir -p uploads
 
 # Set environment defaults
 ENV NODE_ENV=production
-ENV PORT=5000
+ENV PORT=3000
 
 # Expose port (Railway uses PORT env var)
 EXPOSE $PORT
