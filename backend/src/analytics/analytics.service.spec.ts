@@ -95,7 +95,7 @@ describe('AnalyticsService', () => {
                     exec: jest.fn().mockResolvedValue(mockWeeklyMovements),
                 });
 
-            const result = await service.getDashboardStats();
+            const result = await service.getDashboardStats('test-tenant-id');
 
             expect(result).toHaveProperty('totalItems', 3);
             expect(result).toHaveProperty('lowStockItems', 1);
@@ -130,7 +130,7 @@ describe('AnalyticsService', () => {
                     exec: jest.fn().mockResolvedValue([]),
                 });
 
-            const result = await service.getDashboardStats();
+            const result = await service.getDashboardStats('test-tenant-id');
 
             expect(result.totalInventoryValue).toBe(1250);
         });
@@ -152,7 +152,7 @@ describe('AnalyticsService', () => {
                     exec: jest.fn().mockResolvedValue([]),
                 });
 
-            const result = await service.getDashboardStats();
+            const result = await service.getDashboardStats('test-tenant-id');
 
             expect(result.totalItems).toBe(0);
             expect(result.lowStockItems).toBe(0);
@@ -172,7 +172,7 @@ describe('AnalyticsService', () => {
                 exec: jest.fn().mockResolvedValue(mockTrends),
             });
 
-            const result = await service.getTrends('7d');
+            const result = await service.getTrends('test-tenant-id', '7d');
 
             expect(result).toHaveLength(2);
             expect(result[0]).toEqual({ date: '2026-01-15', in: 100, out: 50 });
@@ -184,7 +184,7 @@ describe('AnalyticsService', () => {
                 exec: jest.fn().mockResolvedValue([]),
             });
 
-            const result = await service.getTrends('7d');
+            const result = await service.getTrends('test-tenant-id', '7d');
 
             expect(result).toEqual([]);
         });
@@ -202,7 +202,7 @@ describe('AnalyticsService', () => {
                 exec: jest.fn().mockResolvedValue(mockItems),
             });
 
-            const result = await service.getAlerts();
+            const result = await service.getAlerts('test-tenant-id');
 
             expect(result.data).toHaveLength(2);
             expect(result.summary.warning).toBe(1);
@@ -219,7 +219,7 @@ describe('AnalyticsService', () => {
                 exec: jest.fn().mockResolvedValue(mockItems),
             });
 
-            const result = await service.getAlerts();
+            const result = await service.getAlerts('test-tenant-id');
 
             expect(result.data[0].type).toBe('critical');
             expect(result.data[0].message).toContain('out of stock');
@@ -234,7 +234,7 @@ describe('AnalyticsService', () => {
                 exec: jest.fn().mockResolvedValue(mockItems),
             });
 
-            const result = await service.getAlerts();
+            const result = await service.getAlerts('test-tenant-id');
 
             expect(result.data[0].type).toBe('warning');
             expect(result.data[0].message).toContain('low on stock');
@@ -249,7 +249,7 @@ describe('AnalyticsService', () => {
                 exec: jest.fn().mockResolvedValue(mockItems),
             });
 
-            const result = await service.getAlerts();
+            const result = await service.getAlerts('test-tenant-id');
 
             expect(result.data).toHaveLength(0);
             expect(result.summary.warning).toBe(0);
@@ -265,7 +265,7 @@ describe('AnalyticsService', () => {
                 exec: jest.fn().mockResolvedValue(mockItems),
             });
 
-            const result = await service.getAlerts();
+            const result = await service.getAlerts('test-tenant-id');
 
             expect(result.data[0].itemId).toBe('item-123');
         });

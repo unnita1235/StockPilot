@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, UseGuards, Put, Param, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, UseGuards, Put, Param, Req } from '@nestjs/common';
 import { StockService } from './stock.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { createResponse } from '../common/api-response';
@@ -11,26 +11,29 @@ export class StockController {
     @Post('add')
     async addStock(
         @Body() body: { itemId: string; quantity: number; reason: string; notes?: string },
-        @Request() req: any
+        @Req() req: any
     ) {
         const userId = req.user?._id?.toString() || req.user?.id;
-        const result = await this.stockService.addStock(body.itemId, body.quantity, body.reason, body.notes, userId);
+        const tenantId = req.tenant?._id?.toString();
+        const result = await this.stockService.addStock(body.itemId, body.quantity, body.reason, body.notes, userId, tenantId);
         return createResponse(result.updated, 'Stock increased');
     }
 
     @Post('remove')
     async removeStock(
         @Body() body: { itemId: string; quantity: number; reason: string; notes?: string },
-        @Request() req: any
+        @Req() req: any
     ) {
         const userId = req.user?._id?.toString() || req.user?.id;
-        const result = await this.stockService.removeStock(body.itemId, body.quantity, body.reason, body.notes, userId);
+        const tenantId = req.tenant?._id?.toString();
+        const result = await this.stockService.removeStock(body.itemId, body.quantity, body.reason, body.notes, userId, tenantId);
         return createResponse(result.updated, 'Stock decreased');
     }
 
     @Get('movements')
-    async getMovements(@Query('itemId') itemId?: string) {
-        const data = await this.stockService.getMovements(itemId);
+    async getMovements(@Query('itemId') itemId?: string, @Req() req?: any) {
+        const tenantId = req?.tenant?._id?.toString();
+        const data = await this.stockService.getMovements(itemId, tenantId);
         return createResponse(data);
     }
 
@@ -38,10 +41,11 @@ export class StockController {
     async quickUpdate(
         @Param('id') id: string,
         @Body() body: { stock: number },
-        @Request() req: any
+        @Req() req: any
     ) {
         const userId = req.user?._id?.toString() || req.user?.id;
-        const updated = await this.stockService.quickUpdate(id, body.stock, userId);
+        const tenantId = req.tenant?._id?.toString();
+        const updated = await this.stockService.quickUpdate(id, body.stock, userId, tenantId);
         return createResponse(updated, 'Stock updated');
     }
 }

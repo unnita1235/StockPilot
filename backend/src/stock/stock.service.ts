@@ -11,19 +11,19 @@ export class StockService {
     @InjectModel(Inventory.name) private readonly inventoryModel: Model<InventoryDocument>,
     @InjectModel(StockMovement.name) private readonly movementModel: Model<StockMovementDocument>,
     private readonly notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
-  async addStock(itemId: string, quantity: number, reason: string, notes?: string, userId?: string) {
+  async addStock(itemId: string, quantity: number, reason: string, notes?: string, userId?: string, tenantId?: string) {
     if (quantity <= 0) throw new BadRequestException('Quantity must be greater than zero');
 
-    const item = await this.inventoryModel.findById(itemId);
+    const item = await this.inventoryModel.findOne({ _id: itemId, tenantId }).exec();
     if (!item) throw new NotFoundException('Item not found');
 
     const previousQuantity = item.quantity;
     item.quantity = previousQuantity + quantity;
     const updated = await item.save();
 
-    await this.movementModel.create({ itemId, type: 'IN', quantity, reason, notes, userId });
+    await this.movementModel.create({ itemId, type: 'IN', quantity, reason, notes, userId, tenantId });
 
     // Emit real-time notification
     await this.notificationsService.sendStockUpdateNotification({
@@ -38,10 +38,10 @@ export class StockService {
     return { previousQuantity, updated };
   }
 
-  async removeStock(itemId: string, quantity: number, reason: string, notes?: string, userId?: string) {
+  async removeStock(itemId: string, quantity: number, reason: string, notes?: string, userId?: string, tenantId?: string) {
     if (quantity <= 0) throw new BadRequestException('Quantity must be greater than zero');
 
-    const item = await this.inventoryModel.findById(itemId);
+    const item = await this.inventoryModel.findOne({ _id: itemId, tenantId }).exec();
     if (!item) throw new NotFoundException('Item not found');
 
     const previousQuantity = item.quantity;
@@ -50,7 +50,7 @@ export class StockService {
     item.quantity = previousQuantity - quantity;
     const updated = await item.save();
 
-    await this.movementModel.create({ itemId, type: 'OUT', quantity, reason, notes, userId });
+    await this.movementModel.create({ itemId, type: 'OUT', quantity, reason, notes, userId, tenantId });
 
     // Emit real-time notification
     await this.notificationsService.sendStockUpdateNotification({
@@ -75,16 +75,16 @@ export class StockService {
     return { previousQuantity, updated };
   }
 
-  async getMovements(itemId?: string) {
-    const filter: any = {};
+  async getMovements(itemId?: string, tenantId?: string) {
+    const filter: any = { tenantId };
     if (itemId) filter.itemId = itemId;
     return this.movementModel.find(filter).sort({ createdAt: -1 }).limit(100).exec();
   }
 
-  async quickUpdate(itemId: string, newStock: number, userId?: string) {
+  async quickUpdate(itemId: string, newStock: number, userId?: string, tenantId?: string) {
     if (newStock < 0) throw new BadRequestException('Stock cannot be negative');
 
-    const item = await this.inventoryModel.findById(itemId);
+    const item = await this.inventoryModel.findOne({ _id: itemId, tenantId }).exec();
     if (!item) throw new NotFoundException('Item not found');
 
     const previousQuantity = item.quantity;
@@ -101,6 +101,7 @@ export class StockService {
         reason: 'Quick update adjustment',
         notes: `Changed from ${previousQuantity} to ${newStock}`,
         userId,
+        tenantId,
       });
 
       // Emit real-time notification

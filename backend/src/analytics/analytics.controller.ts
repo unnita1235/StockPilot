@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { createResponse } from '../common/api-response';
@@ -9,20 +9,24 @@ export class AnalyticsController {
     constructor(private readonly analyticsService: AnalyticsService) { }
 
     @Get('dashboard')
-    async getDashboard() {
-        const data = await this.analyticsService.getDashboardStats();
+    async getDashboard(@Req() req) {
+        // Safe access to tenant ID (fallback to null if not set, though middleware ensures it)
+        const tenantId = req.tenant?._id?.toString();
+        const data = await this.analyticsService.getDashboardStats(tenantId);
         return createResponse(data);
     }
 
     @Get('trends')
-    async getTrends(@Query('period') period: string) {
-        const data = await this.analyticsService.getTrends(period || '7d');
+    async getTrends(@Query('period') period: string, @Req() req) {
+        const tenantId = req.tenant?._id?.toString();
+        const data = await this.analyticsService.getTrends(tenantId, period || '7d');
         return createResponse(data);
     }
 
     @Get('alerts')
-    async getAlerts() {
-        const result = await this.analyticsService.getAlerts();
+    async getAlerts(@Req() req) {
+        const tenantId = req.tenant?._id?.toString();
+        const result = await this.analyticsService.getAlerts(tenantId);
         return {
             success: true,
             data: result.data,

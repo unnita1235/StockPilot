@@ -20,7 +20,7 @@ describe('StockService', () => {
 
     beforeEach(async () => {
         mockInventoryModel = {
-            findById: jest.fn(),
+            findOne: jest.fn(),
         };
 
         mockMovementModel = {
@@ -61,10 +61,10 @@ describe('StockService', () => {
     describe('addStock', () => {
         it('should add stock and create movement record', async () => {
             const item = { ...mockItem, save: jest.fn().mockResolvedValue({ ...mockItem, quantity: 110 }) };
-            mockInventoryModel.findById.mockResolvedValue(item);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(item) });
             mockMovementModel.create.mockResolvedValue({});
 
-            const result = await service.addStock('item123', 10, 'Restock', 'Monthly order', 'user1');
+            const result = await service.addStock('item123', 10, 'Restock', 'Monthly order', 'user1', 'test-tenant-id');
 
             expect(result.previousQuantity).toBe(100);
             expect(result.updated.quantity).toBe(110);
@@ -87,24 +87,24 @@ describe('StockService', () => {
         });
 
         it('should throw BadRequestException for zero or negative quantity', async () => {
-            await expect(service.addStock('item123', 0, 'Test')).rejects.toThrow(BadRequestException);
-            await expect(service.addStock('item123', -5, 'Test')).rejects.toThrow(BadRequestException);
+            await expect(service.addStock('item123', 0, 'Test', undefined, 'user1', 'test-tenant-id')).rejects.toThrow(BadRequestException);
+            await expect(service.addStock('item123', -5, 'Test', undefined, 'user1', 'test-tenant-id')).rejects.toThrow(BadRequestException);
         });
 
         it('should throw NotFoundException if item not found', async () => {
-            mockInventoryModel.findById.mockResolvedValue(null);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
 
-            await expect(service.addStock('nonexistent', 10, 'Test')).rejects.toThrow(NotFoundException);
+            await expect(service.addStock('nonexistent', 10, 'Test', undefined, 'user1', 'test-tenant-id')).rejects.toThrow(NotFoundException);
         });
     });
 
     describe('removeStock', () => {
         it('should remove stock and create movement record', async () => {
             const item = { ...mockItem, save: jest.fn().mockResolvedValue({ ...mockItem, quantity: 90 }) };
-            mockInventoryModel.findById.mockResolvedValue(item);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(item) });
             mockMovementModel.create.mockResolvedValue({});
 
-            const result = await service.removeStock('item123', 10, 'Sale', 'Customer order', 'user1');
+            const result = await service.removeStock('item123', 10, 'Sale', 'Customer order', 'user1', 'test-tenant-id');
 
             expect(result.previousQuantity).toBe(100);
             expect(result.updated.quantity).toBe(90);
@@ -115,14 +115,15 @@ describe('StockService', () => {
                 reason: 'Sale',
                 notes: 'Customer order',
                 userId: 'user1',
+                tenantId: 'test-tenant-id',
             });
         });
 
         it('should throw BadRequestException for insufficient stock', async () => {
             const item = { ...mockItem, quantity: 5, save: jest.fn() };
-            mockInventoryModel.findById.mockResolvedValue(item);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(item) });
 
-            await expect(service.removeStock('item123', 10, 'Sale')).rejects.toThrow(BadRequestException);
+            await expect(service.removeStock('item123', 10, 'Sale', undefined, 'user1', 'test-tenant-id')).rejects.toThrow(BadRequestException);
         });
 
         it('should trigger low stock alert when quantity drops below threshold', async () => {
@@ -163,10 +164,10 @@ describe('StockService', () => {
                 }),
             });
 
-            const result = await service.getMovements('item123');
+            const result = await service.getMovements('item123', 'test-tenant-id');
 
             expect(result).toEqual(mockMovements);
-            expect(mockMovementModel.find).toHaveBeenCalledWith({ itemId: 'item123' });
+            expect(mockMovementModel.find).toHaveBeenCalledWith({ itemId: 'item123', tenantId: 'test-tenant-id' });
         });
 
         it('should return all movements when no itemId provided', async () => {
@@ -194,10 +195,10 @@ describe('StockService', () => {
                 quantity: 100,
                 save: jest.fn().mockResolvedValue({ ...mockItem, quantity: 150 }),
             };
-            mockInventoryModel.findById.mockResolvedValue(item);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(item) });
             mockMovementModel.create.mockResolvedValue({});
 
-            const result = await service.quickUpdate('item123', 150, 'user1');
+            const result = await service.quickUpdate('item123', 150, 'user1', 'test-tenant-id');
 
             expect(result.quantity).toBe(150);
             expect(mockMovementModel.create).toHaveBeenCalledWith(

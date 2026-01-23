@@ -11,14 +11,17 @@ export class AnalyticsService {
         @InjectModel(StockMovement.name) private stockModel: Model<StockMovementDocument>,
     ) { }
 
-    async getDashboardStats() {
-        const items = await this.inventoryModel.find().exec();
-        const recentMovements = await this.stockModel.find().limit(10).sort({ createdAt: -1 }).exec();
+    async getDashboardStats(tenantId: string) {
+        const items = await this.inventoryModel.find({ tenantId }).exec();
+        const recentMovements = await this.stockModel.find({ tenantId }).limit(10).sort({ createdAt: -1 }).exec();
 
         // REAL Weekly Activity Calculation
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const weeklyMovements = await this.stockModel.find({ createdAt: { $gte: sevenDaysAgo } }).exec();
+        const weeklyMovements = await this.stockModel.find({
+            tenantId,
+            createdAt: { $gte: sevenDaysAgo }
+        }).exec();
 
         const totalItems = items.length;
         // Uses the correct 'lowStockThreshold' field
@@ -50,12 +53,17 @@ export class AnalyticsService {
         };
     }
 
-    async getTrends(period: string = '7d') {
+    async getTrends(tenantId: string, period: string = '7d') {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 7);
 
         const trends = await this.stockModel.aggregate([
-            { $match: { createdAt: { $gte: startDate } } },
+            {
+                $match: {
+                    tenantId,
+                    createdAt: { $gte: startDate }
+                }
+            },
             {
                 $group: {
                     _id: {
@@ -82,8 +90,8 @@ export class AnalyticsService {
         }));
     }
 
-    async getAlerts() {
-        const allItems = await this.inventoryModel.find().exec();
+    async getAlerts(tenantId: string) {
+        const allItems = await this.inventoryModel.find({ tenantId }).exec();
         const lowStockItems = allItems.filter(item => item.quantity <= (item.lowStockThreshold || 5));
 
         const alerts = lowStockItems.map(item => ({
