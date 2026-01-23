@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, BarChart3, Settings, LogOut, User } from 'lucide-react';
+import { Home, BarChart3, Settings, LogOut, User, Shield } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -29,9 +29,10 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const menuItems = [
-  { icon: Home, label: 'Inventory', href: '/' },
-  { icon: BarChart3, label: 'Reports', href: '/reports' },
-  { icon: Settings, label: 'Settings', href: '/settings' },
+  { icon: Home, label: 'Inventory', href: '/', roles: ['admin', 'manager', 'staff', 'viewer'] },
+  { icon: BarChart3, label: 'Reports', href: '/reports', roles: ['admin', 'manager', 'staff', 'viewer'] },
+  { icon: Shield, label: 'Users', href: '/admin/users', roles: ['admin'] },
+  { icon: Settings, label: 'Settings', href: '/settings', roles: ['admin', 'manager', 'staff', 'viewer'] },
 ];
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
@@ -56,20 +57,22 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={isActive}>
-                    <Link href={item.href}>
-                      <Icon />
-                      {item.label}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
+            {menuItems
+              .filter((item) => !item.roles || item.roles.includes(user?.role || 'viewer'))
+              .map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link href={item.href}>
+                        <Icon />
+                        {item.label}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>

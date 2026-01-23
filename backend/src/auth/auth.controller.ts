@@ -1,7 +1,10 @@
-import { Controller, Post, Put, Body, Get, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Put, Body, Get, Delete, Param, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { RolesGuard } from './roles.guard';
+import { Roles } from './roles.decorator';
 import { Response } from 'express';
+import { UserRole } from './user.schema';
 
 @Controller('auth')
 export class AuthController {
@@ -66,6 +69,80 @@ export class AuthController {
             data: { user: updatedUser },
             message: 'Profile updated successfully'
         });
+    }
+
+    @Post('forgot-password')
+    async forgotPassword(@Body() body: { email: string }) {
+        const result = await this.authService.forgotPassword(body.email);
+        return { success: true, ...result };
+    }
+
+    @Post('reset-password')
+    async resetPassword(@Body() body: { token: string; newPassword: string }) {
+        await this.authService.resetPassword(body.token, body.newPassword);
+        return { success: true, message: 'Password reset successful' };
+    }
+
+    @Post('change-password')
+    @UseGuards(JwtAuthGuard)
+    async changePassword(
+        @Request() req,
+        @Body() body: { currentPassword: string; newPassword: string }
+    ) {
+        await this.authService.changePassword(
+            req.user._id || req.user.id,
+            body.currentPassword,
+            body.newPassword
+        );
+        return { success: true, message: 'Password changed successfully' };
+    }
+
+    // ============ Admin User Management ============
+
+    @Get('users')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    async getAllUsers() {
+        const users = await this.authService.getAllUsers();
+        return { success: true, data: users };
+    }
+
+    @Get('users/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    async getUserById(@Param('id') id: string) {
+        const user = await this.authService.getUserById(id);
+        return { success: true, data: user };
+    }
+
+    @Put('users/:id/role')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    async updateUserRole(
+        @Param('id') id: string,
+        @Body() body: { role: UserRole }
+    ) {
+        const user = await this.authService.updateUserRole(id, body.role);
+        return { success: true, data: user, message: 'User role updated' };
+    }
+
+    @Put('users/:id/status')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    async setUserStatus(
+        @Param('id') id: string,
+        @Body() body: { isActive: boolean }
+    ) {
+        const user = await this.authService.setUserActive(id, body.isActive);
+        return { success: true, data: user, message: `User ${body.isActive ? 'activated' : 'deactivated'}` };
+    }
+
+    @Delete('users/:id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    async deleteUser(@Param('id') id: string) {
+        await this.authService.deleteUser(id);
+        return { success: true, message: 'User deleted' };
     }
 
     private setCookie(res: Response, token: string) {
