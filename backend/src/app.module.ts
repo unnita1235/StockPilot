@@ -5,6 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
+import { tenantIsolationPlugin } from './common/mongoose/tenant-isolation.plugin';
 import { AuthModule } from './auth/auth.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { StockModule } from './stock/stock.module';
@@ -32,6 +33,9 @@ import { UploadModule } from './upload/upload.module';
         }]),
         MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/stockpilot', {
             connectionFactory: (connection) => {
+                // Apply the tenant isolation plugin to all schemas
+                connection.plugin(tenantIsolationPlugin);
+
                 connection.on('connected', () => {
                     console.log('✅ MongoDB connected successfully');
                 });

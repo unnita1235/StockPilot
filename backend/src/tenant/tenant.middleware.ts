@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Tenant, TenantDocument } from './tenant.schema';
+import { TenantContext } from '../common/providers/tenant-context.provider';
 
 export interface RequestWithTenant extends Request {
     tenant?: TenantDocument;
@@ -12,7 +13,7 @@ export interface RequestWithTenant extends Request {
 export class TenantMiddleware implements NestMiddleware {
     constructor(
         @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
-    ) {}
+    ) { }
 
     async use(req: RequestWithTenant, res: Response, next: NextFunction) {
         let tenantIdentifier = 'default';
@@ -23,7 +24,7 @@ export class TenantMiddleware implements NestMiddleware {
         } else {
             const host = req.headers.host || '';
             const parts = host.split('.');
-            
+
             if (parts.length > 2) {
                 tenantIdentifier = parts[0];
             }
@@ -63,13 +64,15 @@ export class TenantMiddleware implements NestMiddleware {
                     { upsert: true, new: true },
                 );
                 req.tenant = defaultTenant;
+                // Run next() within the context of the default tenant
+                TenantContext.run(defaultTenant._id.toString(), next);
             } else {
                 throw new NotFoundException('Tenant not found or inactive');
             }
         } else {
             req.tenant = tenant;
+            // Run next() within the context of the resolved tenant
+            TenantContext.run(tenant._id.toString(), next);
         }
-
-        next();
     }
 }
