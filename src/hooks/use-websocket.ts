@@ -2,9 +2,19 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { io, Socket } from 'socket.io-client';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 
-  (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '').replace('http', 'ws') || 'ws://localhost:5000') + '/ws';
+// Build Socket.IO URL: use NEXT_PUBLIC_WS_URL or derive from API URL
+const getSocketUrl = () => {
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    return process.env.NEXT_PUBLIC_WS_URL;
+  }
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  // Remove /api suffix to get base URL
+  return apiUrl.replace('/api', '');
+};
+
+const SOCKET_URL = getSocketUrl();
 
 export interface StockUpdateEvent {
   type: 'stock_added' | 'stock_removed' | 'stock_adjusted' | 'item_created' | 'item_deleted';
@@ -50,112 +60,116 @@ export function useWebSocket(handlers: WebSocketEventHandlers = {}) {
   const { user, isAuthenticated } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 5;
+  const socketRef = useRef<Socket | null>(null);
+  const handlersRef = useRef(handlers);
+
+  // Keep handlers ref updated to avoid stale closures
+  useEffect(() => {
+    handlersRef.current = handlers;
+  }, [handlers]);
 
   const connect = useCallback(() => {
-    if (!isAuthenticated || socketRef.current?.readyState === WebSocket.OPEN) {
+    if (!isAuthenticated || socketRef.current?.connected) {
       return;
     }
 
     try {
-      // For now, we'll use a simple implementation that degrades gracefully
-      // In production, you'd use socket.io-client for better compatibility
-      const ws = new WebSocket(WS_URL);
+      // Create Socket.IO connection with /ws namespace (matching backend)
+      const socket = io(`${SOCKET_URL}/ws`, {
+        transports: ['websocket', 'polling'], // Try WebSocket first, fallback to polling
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 30000,
+      });
 
-      ws.onopen = () => {
+      // Connection established
+      socket.on('connect', () => {
         setIsConnected(true);
         setConnectionError(null);
-        reconnectAttemptsRef.current = 0;
-        
+
         // Authenticate with user info
         if (user) {
-          ws.send(JSON.stringify({
-            event: 'authenticate',
-            data: { userId: user.id || user._id, role: user.role || 'staff' }
-          }));
+          socket.emit('authenticate', {
+            userId: user.id || user._id,
+            role: user.role || 'staff',
+          });
         }
-        
-        handlers.onConnect?.();
-      };
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          switch (data.event) {
-            case 'stock_update':
-            case 'item_stock_update':
-              handlers.onStockUpdate?.(data.data);
-              break;
-            case 'alert':
-            case 'critical_alert':
-              handlers.onAlert?.(data.data);
-              break;
-            case 'notification':
-              handlers.onNotification?.(data.data);
-              break;
-            case 'dashboard_update':
-              handlers.onDashboardUpdate?.(data.data);
-              break;
-          }
-        } catch (e) {
-          console.warn('Failed to parse WebSocket message:', e);
-        }
-      };
+        handlersRef.current.onConnect?.();
+      });
 
-      ws.onclose = () => {
+      // Connection confirmation from server
+      socket.on('connected', (data) => {
+        console.log('Server confirmed connection:', data.message);
+      });
+
+      // Stock update events
+      socket.on('stock_update', (data: StockUpdateEvent) => {
+        handlersRef.current.onStockUpdate?.(data);
+      });
+
+      socket.on('item_stock_update', (data: StockUpdateEvent) => {
+        handlersRef.current.onStockUpdate?.(data);
+      });
+
+      // Alert events
+      socket.on('alert', (data: AlertEvent) => {
+        handlersRef.current.onAlert?.(data);
+      });
+
+      socket.on('critical_alert', (data: AlertEvent) => {
+        handlersRef.current.onAlert?.(data);
+      });
+
+      // Notification events
+      socket.on('notification', (data: NotificationEvent) => {
+        handlersRef.current.onNotification?.(data);
+      });
+
+      // Dashboard update events
+      socket.on('dashboard_update', (data: any) => {
+        handlersRef.current.onDashboardUpdate?.(data);
+      });
+
+      // Disconnection
+      socket.on('disconnect', (reason) => {
         setIsConnected(false);
-        handlers.onDisconnect?.();
-        
-        // Attempt reconnection
-        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-          reconnectAttemptsRef.current++;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-          reconnectTimeoutRef.current = setTimeout(connect, delay);
-        }
-      };
+        handlersRef.current.onDisconnect?.();
+        console.log('Socket.IO disconnected:', reason);
+      });
 
-      ws.onerror = (error) => {
-        console.warn('WebSocket error (will fallback to polling):', error);
-        setConnectionError('WebSocket connection failed - using polling fallback');
-      };
+      // Connection error
+      socket.on('connect_error', (error) => {
+        console.warn('Socket.IO connection error (will fallback to polling):', error.message);
+        setConnectionError('Socket connection failed - using polling fallback');
+      });
 
-      socketRef.current = ws;
+      socketRef.current = socket;
     } catch (error) {
-      console.warn('WebSocket initialization failed:', error);
-      setConnectionError('WebSocket not available - using polling fallback');
+      console.warn('Socket.IO initialization failed:', error);
+      setConnectionError('Socket not available - using polling fallback');
     }
-  }, [isAuthenticated, user, handlers]);
+  }, [isAuthenticated, user]);
 
   const disconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
     if (socketRef.current) {
-      socketRef.current.close();
+      socketRef.current.disconnect();
       socketRef.current = null;
     }
     setIsConnected(false);
   }, []);
 
   const subscribeToItem = useCallback((itemId: string) => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        event: 'subscribe_item',
-        data: itemId
-      }));
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('subscribe_item', itemId);
     }
   }, []);
 
   const unsubscribeFromItem = useCallback((itemId: string) => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        event: 'unsubscribe_item',
-        data: itemId
-      }));
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('unsubscribe_item', itemId);
     }
   }, []);
 
