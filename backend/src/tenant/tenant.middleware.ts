@@ -66,8 +66,8 @@ export class TenantMiddleware implements NestMiddleware {
                 req.tenant = defaultTenant;
                 // Run next() within the context of the default tenant
                 TenantContext.run(defaultTenant._id.toString(), next);
-    }                
-
+                
+            }
         } else {
             req.tenant = tenant;
             // Run next() within the context of the resolved tenant
