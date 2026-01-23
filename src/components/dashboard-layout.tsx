@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, BarChart3, Settings, LogOut, User, Shield } from 'lucide-react';
+import { Home, BarChart3, Settings, LogOut, User, Shield, Package, FileText } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -29,8 +29,11 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const menuItems = [
-  { icon: Home, label: 'Inventory', href: '/', roles: ['admin', 'manager', 'staff', 'viewer'] },
+  { icon: Home, label: 'Dashboard', href: '/', roles: ['admin', 'manager', 'staff', 'viewer'] },
+  { icon: Package, label: 'Inventory', href: '/inventory', roles: ['admin', 'manager', 'staff', 'viewer'] },
+  { icon: BarChart3, label: 'Analytics', href: '/analytics', roles: ['admin', 'manager', 'staff', 'viewer'] },
   { icon: BarChart3, label: 'Reports', href: '/reports', roles: ['admin', 'manager', 'staff', 'viewer'] },
+  { icon: FileText, label: 'Audit Logs', href: '/audit', roles: ['admin', 'manager'] },
   { icon: Shield, label: 'Users', href: '/admin/users', roles: ['admin'] },
   { icon: Settings, label: 'Settings', href: '/settings', roles: ['admin', 'manager', 'staff', 'viewer'] },
 ];

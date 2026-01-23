@@ -1,11 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
 import { ErrorBoundary } from '@/components/error-boundary';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'StockPilot - Inventory Management',
@@ -19,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className={`${inter.className} font-body antialiased h-full`} suppressHydrationWarning>
+      <body className="font-sans antialiased h-full" suppressHydrationWarning>
         <ErrorBoundary>
           <AuthProvider>
             {children}
