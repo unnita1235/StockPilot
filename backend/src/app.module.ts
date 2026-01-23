@@ -3,9 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { join } from 'path';
 import { tenantIsolationPlugin } from './common/mongoose/tenant-isolation.plugin';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AuthModule } from './auth/auth.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { StockModule } from './stock/stock.module';
@@ -160,6 +161,11 @@ import { DatabaseModule } from './database/database.module';
         {
             provide: APP_GUARD,
             useClass: ThrottlerGuard,
+        },
+        // Global exception filter for consistent error responses
+        {
+            provide: APP_FILTER,
+            useClass: HttpExceptionFilter,
         },
     ],
 })
