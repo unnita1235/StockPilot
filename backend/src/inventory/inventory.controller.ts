@@ -5,6 +5,7 @@ import { createResponse } from '../common/api-response';
 import { RequestWithTenant } from '../tenant/tenant.middleware';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
+import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard)
@@ -37,6 +38,17 @@ export class InventoryController {
         const tenantId = req.tenant?._id;
         const data = await this.inventoryService.update(id, dto, tenantId);
         return createResponse(data, 'Item updated');
+    }
+
+    @Post(':id/movement')
+    async addStockMovement(
+        @Param('id') id: string,
+        @Body() dto: CreateStockMovementDto,
+        @Request() req: RequestWithTenant
+    ) {
+        const tenantId = req.tenant?._id;
+        const data = await this.inventoryService.createMovement(id, dto, tenantId);
+        return createResponse(data, 'Stock movement recorded');
     }
 
     @Delete(':id')
