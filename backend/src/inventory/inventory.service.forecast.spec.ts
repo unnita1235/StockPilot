@@ -5,10 +5,13 @@ import { Inventory } from './inventory.schema';
 import { StockMovement, StockMovementType } from './stock-movement.schema';
 import { NotFoundException } from '@nestjs/common';
 
+import { AuditService } from '../audit/audit.service';
+
 describe('InventoryService - Forecasting', () => {
     let service: InventoryService;
     let inventoryModel: any;
     let stockMovementModel: any;
+    let mockAuditService: any;
 
     beforeEach(async () => {
         inventoryModel = {
@@ -20,12 +23,16 @@ describe('InventoryService - Forecasting', () => {
         stockMovementModel = {
             find: jest.fn(),
         };
+        mockAuditService = {
+            log: jest.fn().mockResolvedValue(undefined),
+        };
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 InventoryService,
                 { provide: getModelToken(Inventory.name), useValue: inventoryModel },
                 { provide: getModelToken(StockMovement.name), useValue: stockMovementModel },
+                { provide: AuditService, useValue: mockAuditService },
             ],
         }).compile();
 
