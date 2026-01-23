@@ -1,3 +1,4 @@
+import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -38,7 +39,7 @@ export class TenantMiddleware implements NestMiddleware {
         });
 
         if (!tenant) {
-            if (process.env.NODE_ENV !== 'production') {
+            
                 const defaultTenant = await this.tenantModel.findOneAndUpdate(
                     { slug: 'default' },
                     {
@@ -65,8 +66,7 @@ export class TenantMiddleware implements NestMiddleware {
                 req.tenant = defaultTenant;
                 // Run next() within the context of the default tenant
                 TenantContext.run(defaultTenant._id.toString(), next);
-            } else {
-                throw new NotFoundException('Tenant not found or inactive');
+                
             }
         } else {
             req.tenant = tenant;
