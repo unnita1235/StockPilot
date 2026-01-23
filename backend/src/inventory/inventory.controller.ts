@@ -3,6 +3,8 @@ import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { createResponse } from '../common/api-response';
 import { RequestWithTenant } from '../tenant/tenant.middleware';
+import { CreateInventoryDto } from './dto/create-inventory.dto';
+import { UpdateInventoryDto } from './dto/update-inventory.dto';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard)
@@ -17,7 +19,7 @@ export class InventoryController {
     }
 
     @Post()
-    async create(@Body() dto: any, @Request() req: RequestWithTenant) {
+    async create(@Body() dto: CreateInventoryDto, @Request() req: RequestWithTenant) {
         const tenantId = req.tenant?._id;
         const data = await this.inventoryService.create(dto, tenantId);
         return createResponse(data, 'Item created');
@@ -31,7 +33,7 @@ export class InventoryController {
     }
 
     @Put(':id')
-    async update(@Param('id') id: string, @Body() dto: any, @Request() req: RequestWithTenant) {
+    async update(@Param('id') id: string, @Body() dto: UpdateInventoryDto, @Request() req: RequestWithTenant) {
         const tenantId = req.tenant?._id;
         const data = await this.inventoryService.update(id, dto, tenantId);
         return createResponse(data, 'Item updated');
@@ -41,6 +43,6 @@ export class InventoryController {
     async remove(@Param('id') id: string, @Request() req: RequestWithTenant) {
         const tenantId = req.tenant?._id;
         await this.inventoryService.remove(id, tenantId);
-        return createResponse(null as any, 'Item deleted');
+        return createResponse(null, 'Item deleted');
     }
 }
