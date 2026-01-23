@@ -53,11 +53,11 @@ export class AnalyticsService {
         };
     }
 
-    async getTrends(tenantId: string, period: string = '7d') {
+    async getTrends(tenantId: string, _period: string = '7d') {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 7);
 
-        const trends = await this.stockModel.aggregate([
+        const trends = await this._period.aggregate([
             {
                 $match: {
                     tenantId,
