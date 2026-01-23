@@ -30,7 +30,20 @@ import { UploadModule } from './upload/upload.module';
             ttl: 60000, // 1 minute
             limit: 100, // 100 requests
         }]),
-        MongooseModule.forRoot(process.env.MONGODB_URI),
+        MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/stockpilot', {
+            connectionFactory: (connection) => {
+                connection.on('connected', () => {
+                    console.log('✅ MongoDB connected successfully');
+                });
+                connection.on('error', (err) => {
+                    console.error('❌ MongoDB connection error:', err.message);
+                });
+                connection.on('disconnected', () => {
+                    console.warn('⚠️ MongoDB disconnected');
+                });
+                return connection;
+            },
+        }),
         TenantModule,
         AuthModule,
         InventoryModule,

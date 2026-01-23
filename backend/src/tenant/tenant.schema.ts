@@ -56,7 +56,5 @@ export class Tenant {
 
 export const TenantSchema = SchemaFactory.createForClass(Tenant);
 
-// Indexes
-TenantSchema.index({ slug: 1 });
-TenantSchema.index({ domain: 1 });
+// Additional indexes (slug and domain already have unique indexes from @Prop)
 TenantSchema.index({ status: 1 });
