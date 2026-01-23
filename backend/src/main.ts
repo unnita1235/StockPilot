@@ -43,6 +43,11 @@ async function bootstrap() {
         }
 
         if (allowedOrigins.includes(origin)) {
+                // Allow all vercel.app domains
+                if (origin && origin.endsWith('.vercel.app')) {
+                          callback(null, true);
+                          return;
+                        }
           callback(null, true);
         } else {
           console.warn(`CORS blocked origin: ${origin}`);
