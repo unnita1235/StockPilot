@@ -42,12 +42,7 @@ async function bootstrap() {
           return;
         }
 
-        if (allowedOrigins.includes(origin)) {
-                // Allow all vercel.app domains
-                if (origin && origin.endsWith('.vercel.app')) {
-                          callback(null, true);
-                          return;
-                        }
+        if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
           callback(null, true);
         } else {
           console.warn(`CORS blocked origin: ${origin}`);

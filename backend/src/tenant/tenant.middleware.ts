@@ -39,38 +39,33 @@ export class TenantMiddleware implements NestMiddleware {
         });
 
         if (!tenant) {
-
-                const defaultTenant = await this.tenantModel.findOneAndUpdate(
-                    { slug: 'default' },
-                    {
-                        $setOnInsert: {
-                            name: 'Default Organization',
-                            slug: 'default',
-                            domain: 'localhost',
-                            contactEmail: 'admin@stockpilot.com',
-                            settings: {
-                                timezone: 'UTC',
-                                currency: 'USD',
-                                dateFormat: 'YYYY-MM-DD',
-                                lowStockAlertEmail: 'admin@stockpilot.com',
-                                features: {
-                                    aiForecasting: true,
-                                    multiWarehouse: false,
-                                    advancedReporting: true,
-                                },
+            const defaultTenant = await this.tenantModel.findOneAndUpdate(
+                { slug: 'default' },
+                {
+                    $setOnInsert: {
+                        name: 'Default Organization',
+                        slug: 'default',
+                        domain: 'localhost',
+                        contactEmail: 'admin@stockpilot.com',
+                        settings: {
+                            timezone: 'UTC',
+                            currency: 'USD',
+                            dateFormat: 'YYYY-MM-DD',
+                            lowStockAlertEmail: 'admin@stockpilot.com',
+                            features: {
+                                aiForecasting: true,
+                                multiWarehouse: false,
+                                advancedReporting: true,
                             },
                         },
                     },
-                    { upsert: true, new: true },
-                );
-                req.tenant = defaultTenant;
-                // Run next() within the context of the default tenant
-                TenantContext.run(defaultTenant._id.toString(), next);
-                
-            }
+                },
+                { upsert: true, new: true },
+            );
+            req.tenant = defaultTenant;
+            TenantContext.run(defaultTenant._id.toString(), next);
         } else {
             req.tenant = tenant;
-            // Run next() within the context of the resolved tenant
             TenantContext.run(tenant._id.toString(), next);
         }
     }

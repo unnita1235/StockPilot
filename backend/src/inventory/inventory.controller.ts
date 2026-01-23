@@ -9,7 +9,7 @@ import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard)
-    export class InventoryController {
+export class InventoryController {
     constructor(private readonly inventoryService: InventoryService) { }
 
     @Get()
