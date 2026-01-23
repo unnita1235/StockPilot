@@ -10,6 +10,10 @@ export type InventoryItem = {
   sku?: string;
   unitPrice?: number;
   isLowStock?: boolean;
+  imageUrl?: string;
+  barcode?: string;
+  supplier?: string;
+  tags?: string[];
 };
 
 export const categories: InventoryCategory[] = ['Raw Material', 'Packaging Material', 'Product for Sale'];

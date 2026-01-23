@@ -1,6 +1,8 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { StockModule } from './stock/stock.module';
@@ -14,6 +16,7 @@ import { TenantModule } from './tenant/tenant.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { HealthController } from './health/health.controller';
 import { SeedModule } from './seed/seed.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
     imports: [
@@ -32,6 +35,14 @@ import { SeedModule } from './seed/seed.module';
         WebsocketModule,
         ReportsModule,
         SeedModule,
+        UploadModule,
+        ServeStaticModule.forRoot({
+            rootPath: join(__dirname, '..', 'uploads'),
+            serveRoot: '/uploads',
+            serveStaticOptions: {
+                index: false,
+            },
+        }),
     ],
     controllers: [HealthController],
 })

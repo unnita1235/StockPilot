@@ -28,6 +28,21 @@ export class Inventory {
 
     @Prop({ default: 0 })
     unitPrice: number;
+
+    @Prop()
+    imageUrl: string;
+
+    @Prop()
+    sku: string;
+
+    @Prop()
+    barcode: string;
+
+    @Prop()
+    supplier: string;
+
+    @Prop({ type: [String], default: [] })
+    tags: string[];
 }
 
 export const InventorySchema = SchemaFactory.createForClass(Inventory);
