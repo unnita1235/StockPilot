@@ -1,6 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { createResponse } from '../common/api-response';
 
 @Controller('analytics')
 @UseGuards(JwtAuthGuard)
@@ -8,22 +9,29 @@ export class AnalyticsController {
     constructor(private readonly analyticsService: AnalyticsService) { }
 
     @Get('dashboard')
-    getDashboard() {
-        return this.analyticsService.getDashboardStats();
+    async getDashboard() {
+        const data = await this.analyticsService.getDashboardStats();
+        return createResponse(data);
     }
 
     @Get('trends')
-    getTrends(@Query('period') period: string) {
-        return this.analyticsService.getTrends(period || 'month');
+    async getTrends(@Query('period') period: string) {
+        const data = await this.analyticsService.getTrends(period || '7d');
+        return createResponse(data);
     }
 
     @Get('alerts')
-    getAlerts() {
-        return this.analyticsService.getAlerts();
+    async getAlerts() {
+        const result = await this.analyticsService.getAlerts();
+        return {
+            success: true,
+            data: result.data,
+            summary: result.summary,
+        };
     }
 
-    @Get('report') // Matching api.ts
+    @Get('report')
     getReport(@Query('type') type: string) {
-        return { message: `Report generation for ${type} not implemented yet` };
+        return createResponse({ message: `Report generation for ${type} coming soon` });
     }
 }

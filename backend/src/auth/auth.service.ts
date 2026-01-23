@@ -55,6 +55,20 @@ export class AuthService {
         return this.userModel.findById(userId).select('-password').exec();
     }
 
+    async updateProfile(userId: string, updates: { name?: string }) {
+        const user = await this.userModel.findById(userId).exec();
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        if (updates.name) {
+            user.name = updates.name;
+        }
+
+        await user.save();
+        return this.sanitizeUser(user);
+    }
+
     private generateToken(user: UserDocument) {
         const payload = { sub: user._id, email: user.email };
         return this.jwtService.sign(payload);

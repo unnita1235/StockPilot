@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Put, Body, Get, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Response } from 'express';
@@ -50,7 +50,22 @@ export class AuthController {
     @Get('me')
     @UseGuards(JwtAuthGuard)
     async getProfile(@Request() req) {
-        return { user: req.user };
+        return { success: true, data: { user: req.user } };
+    }
+
+    @Put('profile')
+    @UseGuards(JwtAuthGuard)
+    async updateProfile(
+        @Request() req,
+        @Body() body: { name?: string },
+        @Res() res: Response
+    ) {
+        const updatedUser = await this.authService.updateProfile(req.user._id || req.user.id, body);
+        return res.status(HttpStatus.OK).json({
+            success: true,
+            data: { user: updatedUser },
+            message: 'Profile updated successfully'
+        });
     }
 
     private setCookie(res: Response, token: string) {

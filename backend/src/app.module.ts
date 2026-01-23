@@ -13,6 +13,7 @@ import { ReportsModule } from './reports/reports.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { HealthController } from './health/health.controller';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
     imports: [
@@ -30,6 +31,7 @@ import { HealthController } from './health/health.controller';
         NotificationsModule,
         WebsocketModule,
         ReportsModule,
+        SeedModule,
     ],
     controllers: [HealthController],
 })
