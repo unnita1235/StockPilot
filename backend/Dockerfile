@@ -27,6 +27,9 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --omit=dev
 
+# Install curl for healthcheck
+RUN apk --no-cache add curl
+
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
@@ -40,9 +43,9 @@ ENV PORT=3000
 # Expose port (Railway uses PORT env var)
 EXPOSE $PORT
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/api/health || exit 1
+# Health check - use curl and 127.0.0.1 to avoid IPv6 issues
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+  CMD curl -f http://127.0.0.1:$PORT/api/health || exit 1
 
 # Start the application
 CMD ["node", "dist/main.js"]
