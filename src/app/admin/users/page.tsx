@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { ProtectedRoute } from '@/components/protected-route';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,8 +42,8 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
-import { 
-  Users, MoreHorizontal, Shield, UserX, UserCheck, Trash2, 
+import {
+  Users, MoreHorizontal, Shield, UserX, UserCheck, Trash2,
   RefreshCw, Crown, UserCog, Eye
 } from 'lucide-react';
 
@@ -81,7 +81,7 @@ export default function UserManagementPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('stockpilot_token');
@@ -109,11 +109,11 @@ export default function UserManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
@@ -221,7 +221,7 @@ export default function UserManagementPage() {
               Refresh
             </Button>
           </header>
-          
+
           <main className="flex-1 flex flex-col gap-4 p-4 md:gap-8 md:p-6 overflow-auto">
             <Card>
               <CardHeader>
@@ -298,7 +298,7 @@ export default function UserManagementPage() {
                               )}
                             </TableCell>
                             <TableCell>
-                              {user.lastLoginAt 
+                              {user.lastLoginAt
                                 ? new Date(user.lastLoginAt).toLocaleDateString()
                                 : 'Never'
                               }
@@ -325,7 +325,7 @@ export default function UserManagementPage() {
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => {
                                       setUserToDelete(user);
@@ -354,7 +354,7 @@ export default function UserManagementPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete User</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete <strong>{userToDelete?.name}</strong>? 
+                Are you sure you want to delete <strong>{userToDelete?.name}</strong>?
                 This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>

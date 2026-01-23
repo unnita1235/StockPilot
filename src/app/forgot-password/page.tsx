@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         setSuccess(true);
       } else {
@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
           </div>
           <CardTitle className="text-2xl text-center">Forgot password?</CardTitle>
           <CardDescription className="text-center">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </CardDescription>
         </CardHeader>
         <CardContent>

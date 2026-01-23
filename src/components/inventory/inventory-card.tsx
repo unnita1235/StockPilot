@@ -1,14 +1,15 @@
 'use client';
 
 import { InventoryItem } from '@/lib/data';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Package, MoreVertical, Edit, Trash2, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,10 +33,11 @@ export function InventoryCard({ item, onEdit, onDelete, onAdjustStock }: Invento
     )}>
       <div className="aspect-video relative bg-muted">
         {item.imageUrl ? (
-          <img 
-            src={item.imageUrl} 
+          <Image
+            src={item.imageUrl}
             alt={item.name}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -62,7 +64,7 @@ export function InventoryCard({ item, onEdit, onDelete, onAdjustStock }: Invento
                 <Minus className="mr-2 h-4 w-4" />
                 Remove Stock
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(item.id)}
               >
@@ -73,7 +75,7 @@ export function InventoryCard({ item, onEdit, onDelete, onAdjustStock }: Invento
           </DropdownMenu>
         </div>
         {(isLowStock || isOutOfStock) && (
-          <Badge 
+          <Badge
             className={cn(
               "absolute top-2 left-2",
               isOutOfStock ? "bg-red-500" : "bg-orange-500"

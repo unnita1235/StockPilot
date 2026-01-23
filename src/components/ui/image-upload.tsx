@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface ImageUploadProps {
   value?: string;
@@ -20,7 +21,7 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     setIsUploading(true);
     setError(null);
 
@@ -58,7 +59,7 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [onChange]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -81,7 +82,7 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
     if (file) {
       uploadFile(file);
     }
-  }, [disabled, isUploading]);
+  }, [disabled, isUploading, uploadFile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -128,10 +129,11 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
       >
         {value ? (
           <div className="relative aspect-video">
-            <img
+            <Image
               src={value}
               alt="Uploaded"
-              className="w-full h-full object-contain rounded-lg"
+              fill
+              className="object-contain rounded-lg"
             />
             {!disabled && (
               <Button
