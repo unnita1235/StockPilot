@@ -5,10 +5,14 @@ import helmet from 'helmet';
 
 async function bootstrap() {
   try {
+    console.log('='.repeat(50));
     console.log('Starting StockPilot Backend...');
-    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log('='.repeat(50));
+    console.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
     console.log(`PORT: ${process.env.PORT || 5000}`);
-    console.log(`MONGODB_URI: ${process.env.MONGODB_URI ? 'SET' : 'NOT SET'}`);
+    console.log(`MONGODB_URI: ${process.env.MONGODB_URI ? 'SET (' + process.env.MONGODB_URI.substring(0, 30) + '...)' : '❌ NOT SET'}`);
+    console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'SET' : '❌ NOT SET'}`);
+    console.log(`FRONTEND_URL: ${process.env.FRONTEND_URL || 'not set'}`);
     
     const app = await NestFactory.create(AppModule);
 
