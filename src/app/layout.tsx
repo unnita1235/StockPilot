@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,11 +20,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${inter.className} font-body antialiased h-full`} suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
 }
+
