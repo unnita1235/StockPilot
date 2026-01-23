@@ -3,7 +3,6 @@ import { InventoryService } from './inventory.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { Inventory } from './inventory.schema';
 import { StockMovement, StockMovementType } from './stock-movement.schema';
-import { NotFoundException } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
 
