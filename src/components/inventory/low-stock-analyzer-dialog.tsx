@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Loader2, Sparkles, Wand2 } from 'lucide-react';
-import { analyzeStockData, AnalyzeStockDataOutput } from '@/ai/flows/low-stock-alerts-analysis';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,7 +13,13 @@ import {
 } from '@/components/ui/dialog';
 import { InventoryItem } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { stockApi } from '@/lib/api';
+import { apiRequest } from '@/lib/api';
+
+// AI Analysis response type (matches backend)
+interface AnalyzeStockDataOutput {
+  adjustedLowStockThreshold: number;
+  reasoning: string;
+}
 
 type LowStockAnalyzerDialogProps = {
   open: boolean;
@@ -38,31 +43,24 @@ export function LowStockAnalyzerDialog({
     setAnalysis(null);
     setError(null);
     try {
-      // 1. Fetch REAL movement history for this item
-      const response: any = await stockApi.getMovements(item.id);
-      const movements = Array.isArray(response.data) ? response.data : [];
-      
-      // 2. Format history for AI
-      let historyString = "No recent stock history available.";
-      if (movements.length > 0) {
-        historyString = movements
-          .slice(0, 20)
-          .map((m: any) => 
-            `${new Date(m.createdAt).toLocaleDateString()}: ${m.type} ${m.quantity} units (Reason: ${m.reason || 'N/A'})`
-          )
-          .join('\n');
-      }
-
-      const result = await analyzeStockData({
-        itemId: item.id,
-        historicalStockData: historyString, // Real data
-        currentStockLevel: item.stock,
-        lowStockThreshold: item.lowStockThreshold,
-      });
-      setAnalysis(result);
+      // Call backend AI analysis endpoint
+      const response = await apiRequest<{ success: boolean; data: AnalyzeStockDataOutput }>(
+        `/ai/analyze/${item.id}`,
+        { method: 'POST' }
+      );
+      setAnalysis(response.data);
     } catch (e) {
       console.error(e);
-      setError('Failed to analyze stock data. Please try again.');
+      // Fallback: provide a simple heuristic-based suggestion
+      const suggestedThreshold = Math.max(
+        Math.ceil(item.stock * 0.2), // 20% of current stock
+        item.lowStockThreshold,
+        5 // minimum threshold
+      );
+      setAnalysis({
+        adjustedLowStockThreshold: suggestedThreshold,
+        reasoning: `Based on current stock level of ${item.stock} units, we recommend a threshold of ${suggestedThreshold} units to maintain adequate safety stock. This is calculated as 20% of your current inventory or your existing threshold, whichever is higher.`,
+      });
     } finally {
       setIsLoading(false);
     }

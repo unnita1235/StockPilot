@@ -110,11 +110,6 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
-          <div className="text-xs text-center text-muted-foreground border-t pt-4 w-full">
-            <p>Demo credentials:</p>
-            <p>Email: admin@stockpilot.com</p>
-            <p>Password: admin123</p>
-          </div>
         </CardFooter>
       </Card>
     </div>

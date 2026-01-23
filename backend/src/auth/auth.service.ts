@@ -78,10 +78,10 @@ export class AuthService {
         return this.sanitizeUser(user);
     }
 
-    async forgotPassword(email: string): Promise<{ message: string; token?: string }> {
+    async forgotPassword(email: string): Promise<{ message: string }> {
         const user = await this.userModel.findOne({ email: email.toLowerCase() }).exec();
         if (!user) {
-            // Don't reveal if user exists or not
+            // Don't reveal if user exists or not - always return same message
             return { message: 'If an account exists with this email, a reset link has been sent.' };
         }
 
@@ -93,12 +93,15 @@ export class AuthService {
         user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
         await user.save();
 
-        // In production, send email here
-        // For now, return the token for testing (remove in production!)
-        return { 
-            message: 'If an account exists with this email, a reset link has been sent.',
-            token: resetToken // Remove this in production - only for testing
-        };
+        // TODO: Send email with reset link in production
+        // Example: await this.emailService.sendPasswordReset(user.email, resetToken);
+        // Reset URL should be: ${FRONTEND_URL}/reset-password?token=${resetToken}
+        
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`[DEV ONLY] Password reset token for ${email}: ${resetToken}`);
+        }
+
+        return { message: 'If an account exists with this email, a reset link has been sent.' };
     }
 
     async resetPassword(token: string, newPassword: string): Promise<void> {

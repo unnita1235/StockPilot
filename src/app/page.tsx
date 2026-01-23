@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { InventoryItem, InventoryCategory } from '@/lib/data';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { InventoryActions } from '@/components/inventory/inventory-actions';
@@ -15,8 +15,9 @@ import { StockActivityChart } from '@/components/inventory/stock-activity-chart'
 import { ProtectedRoute } from '@/components/protected-route';
 import { useInventory } from '@/hooks/use-inventory';
 import { useDashboard } from '@/hooks/use-dashboard';
+import { useWebSocket, StockUpdateEvent, AlertEvent } from '@/hooks/use-websocket';
 import { useToast } from '@/hooks/use-toast';
-import { Search, RefreshCw, WifiOff } from 'lucide-react';
+import { Search, RefreshCw, WifiOff, Wifi } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type DialogState =
@@ -36,15 +37,47 @@ export default function Home() {
     deleteItem: removeItem,
     updateThreshold,
     refresh: refreshInventory,
-  } = useInventory({ pollInterval: 10000 });
+  } = useInventory({ pollInterval: 30000 }); // Reduce polling since we have WebSocket
 
-  const { stats, trends, loading: statsLoading, refresh: refreshStats } = useDashboard({ pollInterval: 30000 });
+  const { stats, trends, loading: statsLoading, refresh: refreshStats } = useDashboard({ pollInterval: 60000 });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<InventoryCategory | 'All'>('All');
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'closed' });
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const { toast } = useToast();
+
+  // WebSocket handlers for real-time updates
+  const handleStockUpdate = useCallback((event: StockUpdateEvent) => {
+    // Refresh inventory when stock changes
+    refreshInventory();
+    refreshStats();
+    
+    // Show toast notification
+    toast({
+      title: event.type === 'stock_added' ? 'Stock Added' : 
+             event.type === 'stock_removed' ? 'Stock Removed' : 'Stock Updated',
+      description: `${event.itemName}: ${event.previousQuantity} → ${event.newQuantity} units`,
+    });
+  }, [refreshInventory, refreshStats, toast]);
+
+  const handleAlert = useCallback((event: AlertEvent) => {
+    toast({
+      title: event.type === 'out_of_stock' ? '⚠️ Out of Stock!' : '⚠️ Low Stock Alert',
+      description: event.message,
+      variant: event.severity === 'critical' ? 'destructive' : 'default',
+    });
+    refreshStats();
+  }, [toast, refreshStats]);
+
+  // Connect to WebSocket for real-time updates
+  const { isConnected: wsConnected } = useWebSocket({
+    onStockUpdate: handleStockUpdate,
+    onAlert: handleAlert,
+    onDashboardUpdate: () => {
+      refreshStats();
+    },
+  });
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -182,10 +215,21 @@ export default function Home() {
         <header className="sticky top-0 z-10 flex h-[57px] items-center justify-between border-b bg-background px-4">
           <h1 className="text-xl font-semibold">Inventory</h1>
           <div className="flex items-center gap-2">
-            {!isOnline && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            {/* Connection status indicator */}
+            {wsConnected ? (
+              <div className="flex items-center gap-1 text-sm text-green-600" title="Real-time updates active">
+                <Wifi className="h-4 w-4" />
+                <span className="hidden sm:inline">Live</span>
+              </div>
+            ) : !isOnline ? (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground" title="Offline mode">
                 <WifiOff className="h-4 w-4" />
-                <span>Offline</span>
+                <span className="hidden sm:inline">Offline</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-sm text-yellow-600" title="Polling for updates">
+                <RefreshCw className="h-4 w-4" />
+                <span className="hidden sm:inline">Polling</span>
               </div>
             )}
             <Button variant="ghost" size="icon" onClick={handleRefresh} title="Refresh">

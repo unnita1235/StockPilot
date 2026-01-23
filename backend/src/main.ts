@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 
 async function bootstrap() {
   try {
@@ -11,21 +12,36 @@ async function bootstrap() {
     
     const app = await NestFactory.create(AppModule);
 
-    // Enable CORS for frontend communication
+    // Security headers with Helmet
+    app.use(helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }));
+
+    // Enable CORS for frontend communication - PRODUCTION READY
     const allowedOrigins = [
       process.env.FRONTEND_URL,
       'https://stock-pilot-wheat.vercel.app',
-      'http://localhost:3000',
-      'http://localhost:9002',
-    ].filter(Boolean);
+      'https://stockpilot.vercel.app',
+      // Only allow localhost in development
+      ...(process.env.NODE_ENV !== 'production' ? [
+        'http://localhost:3000',
+        'http://localhost:9002',
+      ] : []),
+    ].filter(Boolean) as string[];
 
     app.enableCors({
       origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, etc.)
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Allow requests with no origin (mobile apps, server-to-server, health checks)
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
+        
+        if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          callback(null, true); // Allow all for now
+          console.warn(`CORS blocked origin: ${origin}`);
+          callback(new Error('Not allowed by CORS'), false);
         }
       },
       credentials: true,
@@ -33,11 +49,12 @@ async function bootstrap() {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Id'],
     });
 
-    // Enable global validation
+    // Enable global validation with security options
     app.useGlobalPipes(new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      disableErrorMessages: process.env.NODE_ENV === 'production',
     }));
 
     // Set global prefix for API routes
@@ -46,6 +63,7 @@ async function bootstrap() {
     const port = process.env.PORT || 5000;
     await app.listen(port, '0.0.0.0');
     console.log(`🚀 Backend running on port ${port}`);
+    console.log(`📍 Allowed origins: ${allowedOrigins.join(', ')}`);
   } catch (error) {
     console.error('Failed to start application:', error);
     process.exit(1);

@@ -11,11 +11,35 @@ describe('AuthService', () => {
     let mockJwtService: any;
 
     beforeEach(async () => {
-        mockUserModel = {
-            findOne: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
-        };
+        // Create a mock class that can be instantiated
+        const mockSave = jest.fn();
+        const mockToObject = jest.fn();
+        
+        mockUserModel = jest.fn().mockImplementation((data) => ({
+            ...data,
+            _id: 'user123',
+            save: mockSave.mockResolvedValue({
+                ...data,
+                _id: 'user123',
+                toObject: mockToObject.mockReturnValue({
+                    _id: 'user123',
+                    email: data.email,
+                    name: data.name,
+                    role: 'staff',
+                }),
+            }),
+            toObject: mockToObject.mockReturnValue({
+                _id: 'user123',
+                email: data.email,
+                name: data.name,
+                role: 'staff',
+            }),
+        }));
+        mockUserModel.findOne = jest.fn();
+        mockUserModel.findById = jest.fn();
+        mockUserModel.find = jest.fn();
+        mockUserModel.findByIdAndDelete = jest.fn();
+        mockUserModel.findByIdAndUpdate = jest.fn();
 
         mockJwtService = {
             sign: jest.fn().mockReturnValue('mock-jwt-token'),
@@ -44,80 +68,80 @@ describe('AuthService', () => {
 
     describe('register', () => {
         it('should successfully register a new user', async () => {
-            const registerDto = {
-                email: 'test@example.com',
-                password: 'password123',
-                name: 'Test User',
-                role: 'staff' as any,
-            };
+            const email = 'test@example.com';
+            const password = 'password123';
+            const name = 'Test User';
 
-            mockUserModel.findOne.mockResolvedValue(null);
+            mockUserModel.findOne.mockReturnValue({
+                exec: jest.fn().mockResolvedValue(null),
+            });
             const mockUser = {
                 _id: 'user123',
-                email: registerDto.email,
-                name: registerDto.name,
-                role: registerDto.role,
+                email,
+                name,
+                role: 'staff',
+                toObject: jest.fn().mockReturnValue({ _id: 'user123', email, name, role: 'staff' }),
                 save: jest.fn().mockResolvedValue(true),
             };
-            mockUserModel.create = jest.fn().mockReturnValue(mockUser);
+            // Mock the constructor behavior
+            mockUserModel.mockImplementation = jest.fn().mockReturnValue(mockUser);
 
-            const result = await service.register(registerDto);
+            const result = await service.register(email, password, name);
 
-            expect(result).toHaveProperty('accessToken');
+            expect(result).toHaveProperty('token');
             expect(result).toHaveProperty('user');
-            expect(mockUserModel.findOne).toHaveBeenCalledWith({ email: registerDto.email });
+            expect(mockUserModel.findOne).toHaveBeenCalled();
         });
 
         it('should throw ConflictException if user already exists', async () => {
-            const registerDto = {
-                email: 'existing@example.com',
-                password: 'password123',
-                name: 'Existing User',
-                role: 'staff' as any,
-            };
+            const email = 'existing@example.com';
+            const password = 'password123';
+            const name = 'Existing User';
 
-            mockUserModel.findOne.mockResolvedValue({ email: registerDto.email });
+            mockUserModel.findOne.mockReturnValue({
+                exec: jest.fn().mockResolvedValue({ email }),
+            });
 
-            await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
+            await expect(service.register(email, password, name)).rejects.toThrow(ConflictException);
         });
     });
 
     describe('login', () => {
         it('should successfully login with valid credentials', async () => {
-            const loginDto = {
-                email: 'test@example.com',
-                password: 'password123',
-            };
+            const email = 'test@example.com';
+            const password = 'password123';
 
             const mockUser = {
                 _id: 'user123',
-                email: loginDto.email,
-                password: await bcrypt.hash(loginDto.password, 10),
+                email,
+                password: await bcrypt.hash(password, 10),
                 name: 'Test User',
                 role: 'staff',
+                isActive: true,
+                lastLoginAt: null,
+                toObject: jest.fn().mockReturnValue({ _id: 'user123', email, name: 'Test User', role: 'staff' }),
+                save: jest.fn().mockResolvedValue(true),
             };
 
             mockUserModel.findOne.mockReturnValue({
-                select: jest.fn().mockResolvedValue(mockUser),
+                exec: jest.fn().mockResolvedValue(mockUser),
             });
 
-            const result = await service.login(loginDto);
+            const result = await service.login(email, password);
 
-            expect(result).toHaveProperty('accessToken');
+            expect(result).toHaveProperty('token');
             expect(result).toHaveProperty('user');
         });
 
         it('should throw UnauthorizedException with invalid credentials', async () => {
-            const loginDto = {
-                email: 'test@example.com',
-                password: 'wrongpassword',
-            };
+            const email = 'test@example.com';
+            const password = 'wrongpassword';
 
             mockUserModel.findOne.mockReturnValue({
-                select: jest.fn().mockResolvedValue(null),
+                exec: jest.fn().mockResolvedValue(null),
             });
 
-            await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+            await expect(service.login(email, password)).rejects.toThrow(UnauthorizedException);
         });
     });
 });

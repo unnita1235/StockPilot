@@ -2,6 +2,8 @@ import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { InventoryModule } from './inventory/inventory.module';
@@ -23,6 +25,11 @@ import { UploadModule } from './upload/upload.module';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
+        // Rate limiting - 100 requests per minute per IP
+        ThrottlerModule.forRoot([{
+            ttl: 60000, // 1 minute
+            limit: 100, // 100 requests
+        }]),
         MongooseModule.forRoot(process.env.MONGODB_URI),
         TenantModule,
         AuthModule,
@@ -45,6 +52,13 @@ import { UploadModule } from './upload/upload.module';
         }),
     ],
     controllers: [HealthController],
+    providers: [
+        // Enable rate limiting globally
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+        },
+    ],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
