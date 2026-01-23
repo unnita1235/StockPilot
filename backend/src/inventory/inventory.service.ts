@@ -6,12 +6,21 @@ import { StockMovement, StockMovementDocument, StockMovementType } from './stock
 import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 import { ForecastResultDto } from './dto/forecast-result.dto';
 
+import { AuditService } from '../audit/audit.service';
+import { AuditAction } from '../audit/audit.schema';
+
 @Injectable()
 export class InventoryService {
     constructor(
         @InjectModel(Inventory.name) private inventoryModel: Model<InventoryDocument>,
         @InjectModel(StockMovement.name) private stockMovementModel: Model<StockMovementDocument>,
+        private auditService: AuditService,
     ) { }
+
+    // Helper to get user ID - in a real app this would come from CLS/Request Context
+    private getCurrentUserId(): string {
+        return 'system-user'; // Placeholder
+    }
 
     async findAll(tenantId?: string | Types.ObjectId): Promise<InventoryDocument[]> {
         const filter: any = {};
@@ -44,6 +53,15 @@ export class InventoryService {
         const newItem = new this.inventoryModel(data);
         const savedItem = await newItem.save();
 
+        await this.auditService.log({
+            tenantId: savedItem.tenantId.toString(),
+            userId: this.getCurrentUserId(),
+            action: AuditAction.CREATE,
+            entity: 'Inventory',
+            entityId: savedItem._id.toString(),
+            newValue: savedItem.toObject(),
+        });
+
         if (initialQuantity > 0) {
             await this.createMovement(savedItem._id.toString(), {
                 type: StockMovementType.IN,
@@ -67,12 +85,25 @@ export class InventoryService {
             delete dto.quantity;
         }
 
+        const oldItem = await this.inventoryModel.findOne(filter).exec();
+        if (!oldItem) {
+            throw new NotFoundException('Inventory item not found');
+        }
+
         const item = await this.inventoryModel
             .findOneAndUpdate(filter, dto, { new: true })
             .exec();
-        if (!item) {
-            throw new NotFoundException('Inventory item not found');
-        }
+
+        await this.auditService.log({
+            tenantId: item.tenantId.toString(),
+            userId: this.getCurrentUserId(),
+            action: AuditAction.UPDATE,
+            entity: 'Inventory',
+            entityId: item._id.toString(),
+            oldValue: oldItem.toObject(),
+            newValue: item.toObject(),
+        });
+
         return item;
     }
 
@@ -120,10 +151,21 @@ export class InventoryService {
         const filter: any = { _id: id };
         if (tenantId) filter.tenantId = tenantId;
 
-        const result = await this.inventoryModel.findOneAndDelete(filter).exec();
-        if (!result) {
+        const item = await this.inventoryModel.findOne(filter).exec();
+        if (!item) {
             throw new NotFoundException('Inventory item not found');
         }
+
+        await this.inventoryModel.deleteOne(filter).exec();
+
+        await this.auditService.log({
+            tenantId: item.tenantId.toString(),
+            userId: this.getCurrentUserId(),
+            action: AuditAction.DELETE,
+            entity: 'Inventory',
+            entityId: item._id.toString(),
+            oldValue: item.toObject(),
+        });
     }
 
     async getLowStockItems(tenantId?: string | Types.ObjectId): Promise<InventoryDocument[]> {

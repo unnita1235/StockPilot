@@ -12,6 +12,7 @@ import { StockModule } from './stock/stock.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { AiModule } from './ai/ai.module';
+import { AuditModule } from './audit/audit.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { WebsocketModule } from './websocket/websocket.module';
 import { ReportsModule } from './reports/reports.module';
@@ -55,6 +56,7 @@ import { UploadModule } from './upload/upload.module';
         AnalyticsModule,
         SuppliersModule,
         AiModule,
+        AuditModule,
         NotificationsModule,
         WebsocketModule,
         ReportsModule,
