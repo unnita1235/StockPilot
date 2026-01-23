@@ -31,10 +31,8 @@
 **Add these variables**:
 
 \\\
-MONGODB_URI = mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@your-cluster.mongodb.net/your-database?retryWrites=true&w=majority
-
-JWT_SECRET = YOUR_SECURE_JWT_SECRET_HERE_MINIMUM_64_CHARACTERS_LONG
-
+MONGODB_URI = <Get from MongoDB Atlas Connection String>
+JWT_SECRET = <Generate a secure random string, minimum 64 characters>
 PORT = 5000
 
 FRONTEND_URL = https://stockpilot-production-85dd.up.railway.app
