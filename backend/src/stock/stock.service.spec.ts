@@ -75,6 +75,7 @@ describe('StockService', () => {
                 reason: 'Restock',
                 notes: 'Monthly order',
                 userId: 'user1',
+                tenantId: 'test-tenant-id',
             });
             expect(mockNotificationsService.sendStockUpdateNotification).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -133,7 +134,7 @@ describe('StockService', () => {
                 lowStockThreshold: 10,
                 save: jest.fn().mockResolvedValue({ ...mockItem, quantity: 5, lowStockThreshold: 10 }),
             };
-            mockInventoryModel.findById.mockResolvedValue(item);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(item) });
             mockMovementModel.create.mockResolvedValue({});
 
             await service.removeStock('item123', 10, 'Sale', undefined, 'user1');
@@ -228,7 +229,7 @@ describe('StockService', () => {
                 quantity: 100,
                 save: jest.fn().mockResolvedValue({ ...mockItem, quantity: 100 }),
             };
-            mockInventoryModel.findById.mockResolvedValue(item);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(item) });
 
             await service.quickUpdate('item123', 100, 'user1');
 
@@ -243,7 +244,7 @@ describe('StockService', () => {
                 lowStockThreshold: 10,
                 save: jest.fn().mockResolvedValue({ ...mockItem, quantity: 5, lowStockThreshold: 10 }),
             };
-            mockInventoryModel.findById.mockResolvedValue(item);
+            mockInventoryModel.findOne.mockReturnValue({ exec: jest.fn().mockResolvedValue(item) });
             mockMovementModel.create.mockResolvedValue({});
 
             await service.quickUpdate('item123', 5, 'user1');
