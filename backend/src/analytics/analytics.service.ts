@@ -57,7 +57,7 @@ export class AnalyticsService {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 7);
 
-        const trends = await this._period.aggregate([
+        const trends = await this.stockModel.aggregate([
             {
                 $match: {
                     tenantId,
