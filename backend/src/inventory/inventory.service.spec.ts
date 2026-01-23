@@ -266,8 +266,7 @@ describe('InventoryService', () => {
                 exec: jest.fn().mockResolvedValue({ ...mockItem, quantity: 15 }),
             });
 
-            const result = await service.createMovement(inventoryId, dto, mockTenantId);
-
+await service.createMovement(inventoryId, dto, mockTenantId);
             expect(mockStockMovementModel.save).toHaveBeenCalled();
             expect(mockInventoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
                 inventoryId,
