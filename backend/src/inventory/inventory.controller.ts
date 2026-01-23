@@ -10,6 +10,7 @@ import { ForecastResultDto } from './dto/forecast-result.dto';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard)
+    export class InventoryController {
     constructor(private readonly inventoryService: InventoryService) { }
 
     @Get()
