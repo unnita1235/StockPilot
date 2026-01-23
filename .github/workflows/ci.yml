@@ -17,7 +17,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ${{ matrix.dir }}/package-lock.json
       - name: Install dependencies
-        run: cd ${{ matrix.dir }} && npm ci
+        run: cd ${{ matrix.dir }} && npm install
       - name: Lint
         run: cd ${{ matrix.dir }} && npm run lint
       - name: Test
