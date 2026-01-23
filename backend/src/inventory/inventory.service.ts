@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Inventory, InventoryDocument } from './inventory.schema';
 import { StockMovement, StockMovementDocument, StockMovementType } from './stock-movement.schema';
 import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
+import { ForecastResultDto } from './dto/forecast-result.dto';
 
 @Injectable()
 export class InventoryService {
@@ -132,5 +133,68 @@ export class InventoryService {
         if (tenantId) filter.tenantId = tenantId;
 
         return this.inventoryModel.find(filter).exec();
+    }
+
+    async getForecast(inventoryId: string): Promise<ForecastResultDto> {
+        const item = await this.inventoryModel.findById(inventoryId).exec();
+        if (!item) {
+            throw new NotFoundException('Inventory item not found');
+        }
+
+        // 1. Calculate Average Daily Consumption (ADC)
+        // Look back 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const movements = await this.stockMovementModel.find({
+            inventoryId: item._id,
+            type: StockMovementType.OUT,
+            createdAt: { $gte: thirtyDaysAgo }
+        }).exec();
+
+        let totalOut = 0;
+        movements.forEach(m => {
+            totalOut += Math.abs(m.quantity);
+        });
+
+        // Use 30 days for average to smooth out spikes, even if data is younger
+        const adc = totalOut / 30;
+
+        // 2. Expected Stock-out Date
+        let daysUntilStockout: number | null = null;
+        let stockOutDate: Date | null = null;
+
+        if (adc > 0) {
+            daysUntilStockout = item.quantity / adc;
+            stockOutDate = new Date();
+            stockOutDate.setDate(stockOutDate.getDate() + Math.floor(daysUntilStockout));
+        }
+
+        // 3. Recommended Reorder Quantity
+        // Policy: Keep 30 days of stock (TargetDays) + 7 days LeadTime
+        const targetDays = 30;
+        const leadTime = 7;
+        const targetStock = adc * (targetDays + leadTime);
+
+        let reorderQuantity = targetStock - item.quantity;
+        if (reorderQuantity < 0) reorderQuantity = 0;
+
+        // Determine Status
+        let status: 'Safe' | 'Low' | 'Critical' = 'Safe';
+        if (daysUntilStockout !== null) {
+            if (daysUntilStockout < leadTime) {
+                status = 'Critical';
+            } else if (daysUntilStockout < leadTime + 5) {
+                status = 'Low';
+            }
+        }
+
+        return {
+            stockOutDate,
+            reorderQuantity: Math.ceil(reorderQuantity), // Round up for safety
+            dailyUsage: parseFloat(adc.toFixed(2)),
+            daysUntilStockout: daysUntilStockout !== null ? Math.floor(daysUntilStockout) : null,
+            status
+        };
     }
 }
