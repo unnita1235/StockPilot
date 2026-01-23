@@ -15,9 +15,9 @@
 Go to Railway Dashboard → Backend Service → Variables Tab → Add these:
 
 \\\ash
-MONGODB_URI=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@your-cluster.mongodb.net/your-database?retryWrites=true&w=majority
+MONGODB_URI=<Get from MongoDB Atlas - Connection String>
 
-JWT_SECRET=YOUR_SECURE_JWT_SECRET_HERE_MINIMUM_64_CHARACTERS_LONG
+JWT_SECRET=<Generate secure random 64+ character string>
 
 PORT=5000
 
