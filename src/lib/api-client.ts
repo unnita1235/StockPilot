@@ -70,7 +70,7 @@ export interface ApiClientConfig {
 }
 
 const defaultConfig: ApiClientConfig = {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000/api' : 'https://backend-production-e7ef.up.railway.app/api'),
     timeout: 30000, // 30 seconds
     retryAttempts: 3,
     retryDelay: 1000, // 1 second base delay
