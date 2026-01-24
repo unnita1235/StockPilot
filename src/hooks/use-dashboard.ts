@@ -2,13 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { analyticsApi, DashboardStats, TrendData, Alert, AlertSummary } from '@/lib/api';
+import { useSocket } from '@/hooks/useSocket';
+import { useToast } from '@/hooks/use-toast';
 
 type UseDashboardOptions = {
   pollInterval?: number;
+  enableRealtime?: boolean;
 };
 
 export function useDashboard(options: UseDashboardOptions = {}) {
-  const { pollInterval = 30000 } = options; // Default 30s for dashboard
+  const { pollInterval = 30000, enableRealtime = true } = options;
+  const { toast } = useToast();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [trends, setTrends] = useState<TrendData[]>([]);
@@ -16,7 +20,6 @@ export function useDashboard(options: UseDashboardOptions = {}) {
   const [alertSummary, setAlertSummary] = useState<AlertSummary>({ critical: 0, warning: 0, info: 0, data: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [isOnline, setIsOnline] = useState(true);
 
   const fetchDashboard = useCallback(async (silent = false) => {
@@ -84,6 +87,31 @@ export function useDashboard(options: UseDashboardOptions = {}) {
     return () => clearInterval(interval);
   }, [pollInterval, isOnline, fetchDashboard]);
 
+  // Real-time WebSocket integration
+  const { isConnected: wsConnected, lastStockUpdate } = useSocket(
+    enableRealtime
+      ? {
+        onStockUpdate: () => {
+          // Refresh dashboard when stock changes
+          fetchDashboard(true);
+        },
+        onAlert: (alert) => {
+          // Show toast for alerts
+          toast({
+            title: alert.type === 'out_of_stock' ? '⚠️ Out of Stock!' : '📉 Low Stock Alert',
+            description: alert.message,
+            variant: alert.severity === 'critical' ? 'destructive' : 'default',
+          });
+          // Refresh to get updated alert counts
+          fetchDashboard(true);
+        },
+        onDashboardUpdate: () => {
+          fetchDashboard(true);
+        },
+      }
+      : {}
+  );
+
   const refresh = useCallback(() => {
     return fetchDashboard(false);
   }, [fetchDashboard]);
@@ -96,5 +124,7 @@ export function useDashboard(options: UseDashboardOptions = {}) {
     loading,
     error,
     refresh,
+    wsConnected,
+    lastStockUpdate,
   };
 }

@@ -16,6 +16,7 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
+import { LiveIndicator } from '@/components/ui/live-indicator';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,7 +54,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <Logo />
+          <div className="flex items-center justify-between w-full">
+            <Logo />
+            <LiveIndicator size="sm" />
+          </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>

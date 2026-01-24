@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { InventoryItem, InventoryCategory, initialInventory } from '@/lib/data';
 import { itemsApi, stockApi, ApiInventoryItem } from '@/lib/api';
+import { useSocket, StockUpdateEvent } from '@/hooks/useSocket';
+import { useToast } from '@/hooks/use-toast';
 
 // Transform API item to frontend format
 function transformItem(item: ApiInventoryItem): InventoryItem {
@@ -22,10 +24,12 @@ function transformItem(item: ApiInventoryItem): InventoryItem {
 
 type UseInventoryOptions = {
   pollInterval?: number; // in ms, 0 to disable
+  enableRealtime?: boolean;
 };
 
 export function useInventory(options: UseInventoryOptions = {}) {
-  const { pollInterval = 10000 } = options; // Default 10s polling
+  const { pollInterval = 10000, enableRealtime = true } = options;
+  const { toast } = useToast();
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,6 +196,32 @@ export function useInventory(options: UseInventoryOptions = {}) {
     return () => clearInterval(interval);
   }, [pollInterval, isOnline, fetchItems]);
 
+  // Real-time WebSocket integration
+  const { isConnected: wsConnected, lastStockUpdate } = useSocket(
+    enableRealtime
+      ? {
+        onStockUpdate: (event: StockUpdateEvent) => {
+          // Show toast notification for stock changes
+          const action = event.type === 'stock_added' ? 'added to' :
+            event.type === 'stock_removed' ? 'removed from' : 'updated for';
+          toast({
+            title: '📦 Stock Update',
+            description: `${event.newQuantity !== undefined ? event.newQuantity - (event.previousQuantity || 0) : ''} units ${action} ${event.itemName}`,
+          });
+          // Refresh inventory list
+          fetchItems(true);
+        },
+        onAlert: (alert) => {
+          toast({
+            title: alert.type === 'out_of_stock' ? '⚠️ Out of Stock!' : '📉 Low Stock',
+            description: alert.message,
+            variant: alert.severity === 'critical' ? 'destructive' : 'default',
+          });
+        },
+      }
+      : {}
+  );
+
   // Refresh function for manual refresh
   const refresh = useCallback(() => {
     return fetchItems(false);
@@ -202,6 +232,8 @@ export function useInventory(options: UseInventoryOptions = {}) {
     loading,
     error,
     isOnline,
+    wsConnected,
+    lastStockUpdate,
     lastFetch: lastFetchRef.current,
     addItem,
     updateItem,
