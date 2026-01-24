@@ -5,6 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { join } from 'path';
+import { config } from './config/env';
 import { tenantIsolationPlugin } from './common/mongoose/tenant-isolation.plugin';
 import { AuthModule } from './auth/auth.module';
 import { InventoryModule } from './inventory/inventory.module';
@@ -21,6 +22,7 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 import { HealthModule } from './health/health.module';
 import { SeedModule } from './seed/seed.module';
 import { UploadModule } from './upload/upload.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
 
 @Module({
     imports: [
@@ -32,7 +34,7 @@ import { UploadModule } from './upload/upload.module';
             ttl: 60000, // 1 minute
             limit: 100, // 100 requests
         }]),
-        MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/stockpilot', {
+        MongooseModule.forRoot(config.mongodb.uri, {
             // CRITICAL: Don't block server startup waiting for MongoDB
             lazyConnection: true,
             // Retry connection attempts
@@ -80,6 +82,7 @@ import { UploadModule } from './upload/upload.module';
             },
         }),
         HealthModule,
+        PortfolioModule,
     ],
     controllers: [],
     providers: [

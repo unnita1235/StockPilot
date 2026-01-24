@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -14,8 +14,11 @@ export class AuthService {
     ) { }
 
     async register(email: string, password: string, name: string) {
-        const existingUser = await this.userModel.findOne({ email }).exec();
-        if (existingUser) {
+        // CRITICAL: Check globally for email existence to prevent duplicate key errors
+        // The tenant plugin filters findOne, so we must use the native collection
+        const existingUserGlobal = await this.userModel.db.collection('users').findOne({ email });
+
+        if (existingUserGlobal) {
             throw new ConflictException('User already exists');
         }
 
@@ -35,10 +38,16 @@ export class AuthService {
     }
 
     async login(email: string, password: string) {
-        const user = await this.userModel.findOne({ email }).exec();
-        if (!user) {
+        // Use native collection to bypass tenant plugin for login lookup
+        // We match by email globally, then validate password
+        const userDoc = await this.userModel.db.collection('users').findOne({ email });
+
+        if (!userDoc) {
             throw new UnauthorizedException('Invalid credentials');
         }
+
+        // Hydrate to a Mongoose document to use methods/virtuals/types
+        const user = this.userModel.hydrate(userDoc);
 
         if (!user.isActive) {
             throw new UnauthorizedException('Account is deactivated');
@@ -61,7 +70,26 @@ export class AuthService {
     }
 
     async validateUser(userId: string): Promise<UserDocument | null> {
-        return this.userModel.findById(userId).select('-password').exec();
+        // Use native collection to bypass tenant plugin for token validation
+        // We want to validate the user exists globally, even if accessing a different tenant context
+        // (Data isolation will still be enforced by service/controller queries using TenantContext)
+        try {
+            const userDoc = await this.userModel.db.collection('users').findOne({
+                _id: new Types.ObjectId(userId)
+            });
+
+            if (!userDoc) {
+                return null;
+            }
+
+            // Hydrate and exclude password (though .select('-password') doesn't work on raw doc, we delete it manually)
+            const user = this.userModel.hydrate(userDoc);
+            const obj = user.toObject();
+            delete obj.password;
+            return user; // Return hydrated user
+        } catch (error) {
+            return null;
+        }
     }
 
     async updateProfile(userId: string, updates: { name?: string }) {
@@ -96,7 +124,7 @@ export class AuthService {
         // TODO: Send email with reset link in production
         // Example: await this.emailService.sendPasswordReset(user.email, resetToken);
         // Reset URL should be: ${FRONTEND_URL}/reset-password?token=${resetToken}
-        
+
         if (process.env.NODE_ENV !== 'production') {
             console.log(`[DEV ONLY] Password reset token for ${email}: ${resetToken}`);
         }

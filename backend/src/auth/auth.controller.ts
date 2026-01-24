@@ -5,14 +5,17 @@ import { RolesGuard } from './roles.guard';
 import { Roles } from './roles.decorator';
 import { Response } from 'express';
 import { UserRole } from './user.schema';
+import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto, ChangePasswordDto, UpdateProfileDto } from './dto/auth.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
+@Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
 export class AuthController {
     constructor(private authService: AuthService) { }
 
     @Post('register')
     async register(
-        @Body() body: { email: string; password: string; name: string },
+        @Body() body: RegisterDto,
         @Res() res: Response
     ) {
         const result = await this.authService.register(body.email, body.password, body.name);
@@ -29,7 +32,7 @@ export class AuthController {
 
     @Post('login')
     async login(
-        @Body() body: { email: string; password: string },
+        @Body() body: LoginDto,
         @Res() res: Response
     ) {
         const result = await this.authService.login(body.email, body.password);
@@ -60,7 +63,7 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     async updateProfile(
         @Request() req,
-        @Body() body: { name?: string },
+        @Body() body: UpdateProfileDto,
         @Res() res: Response
     ) {
         const updatedUser = await this.authService.updateProfile(req.user._id || req.user.id, body);
@@ -72,13 +75,13 @@ export class AuthController {
     }
 
     @Post('forgot-password')
-    async forgotPassword(@Body() body: { email: string }) {
+    async forgotPassword(@Body() body: ForgotPasswordDto) {
         const result = await this.authService.forgotPassword(body.email);
         return { success: true, ...result };
     }
 
     @Post('reset-password')
-    async resetPassword(@Body() body: { token: string; newPassword: string }) {
+    async resetPassword(@Body() body: ResetPasswordDto) {
         await this.authService.resetPassword(body.token, body.newPassword);
         return { success: true, message: 'Password reset successful' };
     }
@@ -87,7 +90,7 @@ export class AuthController {
     @UseGuards(JwtAuthGuard)
     async changePassword(
         @Request() req,
-        @Body() body: { currentPassword: string; newPassword: string }
+        @Body() body: ChangePasswordDto
     ) {
         await this.authService.changePassword(
             req.user._id || req.user.id,

@@ -1,20 +1,16 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   try {
-    console.log('='.repeat(50));
-    console.log('Starting StockPilot Backend...');
-    console.log('='.repeat(50));
-    console.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
-    console.log(`PORT: ${process.env.PORT || 3000}`);
-    console.log(`MONGODB_URI: ${process.env.MONGODB_URI ? 'SET (' + process.env.MONGODB_URI.substring(0, 30) + '...)' : '❌ NOT SET'}`);
-    console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'SET' : '❌ NOT SET'}`);
-    console.log(`FRONTEND_URL: ${process.env.FRONTEND_URL || 'not set'}`);
-
     const app = await NestFactory.create(AppModule);
+
+    // Global Error Handling
+    const httpAdapter = app.get(HttpAdapterHost);
+    app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 
     // Security headers with Helmet
     app.use(helmet({
@@ -44,7 +40,10 @@ async function bootstrap() {
         if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          console.warn(`CORS blocked origin: ${origin}`);
+          // Log blocked origins only in dev/debug to avoid log flooding in prod
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn(`CORS blocked origin: ${origin}`);
+          }
           callback(new Error('Not allowed by CORS'), false);
         }
       },
@@ -64,10 +63,17 @@ async function bootstrap() {
     // Set global prefix for API routes
     app.setGlobalPrefix('api');
 
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 5000;
     await app.listen(port, '0.0.0.0');
+
+    console.log('='.repeat(50));
     console.log(`🚀 Backend running on port ${port}`);
-    console.log(`📍 Allowed origins: ${allowedOrigins.join(', ')}`);
+    console.log(`NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+    // Sanitize logs - do NOT log full secrets or connection strings
+    console.log(`MONGODB_URI: ${process.env.MONGODB_URI ? 'SET' : '❌ NOT SET'}`);
+    console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? 'SET' : '❌ NOT SET'}`);
+    console.log('='.repeat(50));
+
   } catch (error) {
     console.error('Failed to start application:', error);
     process.exit(1);

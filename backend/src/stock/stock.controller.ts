@@ -2,9 +2,11 @@ import { Controller, Post, Body, Get, Query, UseGuards, Put, Param, Req } from '
 import { StockService } from './stock.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { createResponse } from '../common/api-response';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('stock')
 @UseGuards(JwtAuthGuard)
+@Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute
 export class StockController {
     constructor(private readonly stockService: StockService) { }
 
