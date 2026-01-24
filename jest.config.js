@@ -23,7 +23,9 @@ const customJestConfig = {
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
     '!src/**/*.stories.{ts,tsx}',
+    '!src/components/ui/**', // Exclude Radix UI wrapper components
   ],
+  coverageReporters: ['text', 'text-summary', 'lcov', 'clover'],
 };
 
 // Export an async function that properly overrides transformIgnorePatterns
