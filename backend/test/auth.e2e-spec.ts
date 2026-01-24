@@ -13,7 +13,6 @@ describe('Auth (e2e)', () => {
   let app: INestApplication;
   let authToken: string;
   let userId: string;
-  let adminToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -281,16 +280,15 @@ describe('Auth (e2e)', () => {
 
   describe('Admin User Management', () => {
     beforeAll(async () => {
-      // Register an admin user for these tests
-      const response = await request(app.getHttpServer())
+      // Register a second user for admin tests
+      // Note: In a real scenario, you'd update the role in the DB directly
+      await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({
           name: 'Admin E2E',
           email: 'admin-e2e@example.com',
           password: 'AdminPass123!',
         });
-      adminToken = response.body.data.token;
-      // Note: In a real scenario, you'd update the role in the DB directly
     });
 
     it('GET /api/auth/users should require admin role', () => {
