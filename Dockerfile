@@ -7,8 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (skip prepare script/husky)
-RUN npm ci --ignore-scripts
-
+RUN npm install --ignore-scripts
 # Copy config files
 COPY next.config.ts ./
 COPY tailwind.config.ts ./
@@ -31,8 +30,7 @@ ENV NODE_ENV=production
 
 # Copy package files and install production dependencies (skip prepare script)
 COPY package*.json ./
-RUN npm ci --only=production --ignore-scripts
-
+RUN npm install --only=production --ignore-scripts
 # Copy built application from builder
 COPY --from=frontend-builder /app/.next ./.next
 COPY --from=frontend-builder /app/public ./public

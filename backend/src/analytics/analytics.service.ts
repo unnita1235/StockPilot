@@ -53,7 +53,7 @@ export class AnalyticsService {
         };
     }
 
-    async getTrends(tenantId: string, period: string = '7d') {
+    async getTrends(tenantId: string, _period: string = '7d') {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 7);
 

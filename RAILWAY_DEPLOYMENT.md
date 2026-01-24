@@ -15,9 +15,9 @@
 Go to Railway Dashboard → Backend Service → Variables Tab → Add these:
 
 \\\ash
-MONGODB_URI=mongodb+srv://unnita1235_db_user:d0jVi074jJxqXPoQ@stockpilot.rjuxowi.mongodb.net/stockpilot?retryWrites=true&w=majority
+MONGODB_URI=<Get from MongoDB Atlas - Connection String>
 
-JWT_SECRET=EgY37fL8XIqZCO6a4sO97eMd1I9OsM8Jz8ClTCwMHf3xDWj1Uc9BlFxh/EAm5XD8
+JWT_SECRET=<Generate secure random 64+ character string>
 
 PORT=5000
 

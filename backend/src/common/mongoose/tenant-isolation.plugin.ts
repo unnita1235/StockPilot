@@ -1,4 +1,4 @@
-import { Schema, Query, Document, Types } from 'mongoose';
+import { Schema, Query, Types } from 'mongoose';
 import { TenantContext } from '../providers/tenant-context.provider';
 
 export function tenantIsolationPlugin(schema: Schema) {

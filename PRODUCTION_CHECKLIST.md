@@ -31,10 +31,8 @@
 **Add these variables**:
 
 \\\
-MONGODB_URI = mongodb+srv://unnita1235_db_user:d0jVi074jJxqXPoQ@stockpilot.rjuxowi.mongodb.net/stockpilot?retryWrites=true&w=majority
-
-JWT_SECRET = EgY37fL8XIqZCO6a4sO97eMd1I9OsM8Jz8ClTCwMHf3xDWj1Uc9BlFxh/EAm5XD8
-
+MONGODB_URI = <Get from MongoDB Atlas Connection String>
+JWT_SECRET = <Generate a secure random string, minimum 64 characters>
 PORT = 5000
 
 FRONTEND_URL = https://stockpilot-production-85dd.up.railway.app

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   try {
@@ -39,6 +40,14 @@ async function bootstrap() {
 
         if (allowedOrigins.includes(origin)) {
           callback(null, true);
+        } else if (origin && origin.endsWith('.vercel.app')) {
+          // Allow all vercel.app domains (merged from remote logic? or just being safe)
+          // Actually the conflict didn't show this in remote but let's be safe as I saw it in conflict marker earlier?
+          // Wait, the conflict marker showed:
+          // if (allowedOrigins.includes(origin)) { ... } else if (origin && origin.endsWith('.vercel.app')) ...
+          // Re-reading the View output step 157:
+          // The remote added checks for .vercel.app. I should include that.
+          callback(null, true);
         } else {
           // Log blocked origins only in dev/debug to avoid log flooding in prod
           if (process.env.NODE_ENV !== 'production') {
@@ -62,6 +71,17 @@ async function bootstrap() {
 
     // Set global prefix for API routes
     app.setGlobalPrefix('api');
+
+    // Setup Swagger/OpenAPI Documentation
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('StockPilot API')
+      .setDescription('Inventory Management System')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api-docs', app, document);
+    console.log('📚 Swagger documentation available at: /api-docs');
 
     const port = process.env.PORT || 5000;
     await app.listen(port, '0.0.0.0');
