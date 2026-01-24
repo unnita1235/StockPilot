@@ -1,8 +1,6 @@
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Package } from 'lucide-react';
 
-const logoData = PlaceHolderImages.find((img) => img.id === 'logo');
+
+import { Package } from 'lucide-react';
 
 export function Logo() {
   return (

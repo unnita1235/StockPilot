@@ -16,6 +16,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "postinstall": "cd backend && npm install",
     "prepare": "husky"
   },
   "dependencies": {
