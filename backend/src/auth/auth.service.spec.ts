@@ -14,7 +14,7 @@ describe('AuthService', () => {
         // Create a mock class that can be instantiated
         const mockSave = jest.fn();
         const mockToObject = jest.fn();
-        
+
         mockUserModel = jest.fn().mockImplementation((data) => ({
             ...data,
             _id: 'user123',
@@ -40,6 +40,14 @@ describe('AuthService', () => {
         mockUserModel.find = jest.fn();
         mockUserModel.findByIdAndDelete = jest.fn();
         mockUserModel.findByIdAndUpdate = jest.fn();
+        mockUserModel.hydrate = jest.fn().mockImplementation((doc) => doc);
+
+        // Mock db.collection for bypassing tenant plugin
+        mockUserModel.db = {
+            collection: jest.fn().mockReturnValue({
+                findOne: jest.fn(),
+            }),
+        };
 
         mockJwtService = {
             sign: jest.fn().mockReturnValue('mock-jwt-token'),
@@ -72,9 +80,9 @@ describe('AuthService', () => {
             const password = 'password123';
             const name = 'Test User';
 
-            mockUserModel.findOne.mockReturnValue({
-                exec: jest.fn().mockResolvedValue(null),
-            });
+            // Mock implicit check for existing user
+            mockUserModel.db.collection().findOne.mockResolvedValue(null);
+
             const mockUser = {
                 _id: 'user123',
                 email,
@@ -90,7 +98,8 @@ describe('AuthService', () => {
 
             expect(result).toHaveProperty('token');
             expect(result).toHaveProperty('user');
-            expect(mockUserModel.findOne).toHaveBeenCalled();
+            expect(mockUserModel.db.collection).toHaveBeenCalledWith('users');
+            expect(mockUserModel.db.collection().findOne).toHaveBeenCalledWith({ email });
         });
 
         it('should throw ConflictException if user already exists', async () => {
@@ -98,9 +107,8 @@ describe('AuthService', () => {
             const password = 'password123';
             const name = 'Existing User';
 
-            mockUserModel.findOne.mockReturnValue({
-                exec: jest.fn().mockResolvedValue({ email }),
-            });
+            // Mock existing user found
+            mockUserModel.db.collection().findOne.mockResolvedValue({ email });
 
             await expect(service.register(email, password, name)).rejects.toThrow(ConflictException);
         });
@@ -123,9 +131,8 @@ describe('AuthService', () => {
                 save: jest.fn().mockResolvedValue(true),
             };
 
-            mockUserModel.findOne.mockReturnValue({
-                exec: jest.fn().mockResolvedValue(mockUser),
-            });
+            // Mock user found for login
+            mockUserModel.db.collection().findOne.mockResolvedValue(mockUser);
 
             const result = await service.login(email, password);
 
@@ -137,9 +144,8 @@ describe('AuthService', () => {
             const email = 'test@example.com';
             const password = 'wrongpassword';
 
-            mockUserModel.findOne.mockReturnValue({
-                exec: jest.fn().mockResolvedValue(null),
-            });
+            // Mock user NOT found
+            mockUserModel.db.collection().findOne.mockResolvedValue(null);
 
             await expect(service.login(email, password)).rejects.toThrow(UnauthorizedException);
         });
