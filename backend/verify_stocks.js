@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'http://localhost:5001/api';
+const BASE_URL = `http://localhost:${process.env.PORT || 3005}/api`;
 
 async function verifyStocks() {
     try {
@@ -30,15 +30,16 @@ async function verifyStocks() {
             buyPrice: 150.00
         }, { headers });
         console.log('✅ Added AAPL:', addRes.data);
-        const positionId = addRes.data._id;
+        const positionId = addRes.data.data._id;
 
         // 3. Get Portfolio
         console.log('\n📊 Fetching Portfolio...');
         const portRes = await axios.get(`${BASE_URL}/portfolio`, { headers });
-        console.log('✅ Portfolio Summary:', portRes.data.summary);
-        console.log('✅ Portfolio Positions:', portRes.data.positions.length);
+        const portfolioData = portRes.data.data;
+        console.log('✅ Portfolio Summary:', portfolioData.summary);
+        console.log('✅ Portfolio Positions:', portfolioData.positions.length);
 
-        if (portRes.data.positions[0].symbol !== 'AAPL') {
+        if (portfolioData.positions[0].symbol !== 'AAPL') {
             throw new Error('Stock symbol mismatch');
         }
 
@@ -64,9 +65,9 @@ async function verifyStocks() {
         const updateRes = await axios.put(`${BASE_URL}/portfolio/positions/${positionId}`, {
             quantity: 20
         }, { headers });
-        console.log('✅ Updated Quantity:', updateRes.data.quantity);
+        console.log('✅ Updated Quantity:', updateRes.data.data.quantity);
 
-        if (updateRes.data.quantity !== 20) throw new Error('Update failed');
+        if (updateRes.data.data.quantity !== 20) throw new Error('Update failed');
 
         // 5. Delete Position
         console.log('\n🗑️ Deleting Position...');
@@ -75,7 +76,7 @@ async function verifyStocks() {
 
         // 6. Verify Deletion
         const finalPortRes = await axios.get(`${BASE_URL}/portfolio`, { headers });
-        if (finalPortRes.data.positions.length !== 0) {
+        if (finalPortRes.data.data.positions.length !== 0) {
             throw new Error('Position was not deleted');
         }
         console.log('✅ Verification Completed Successfully!');
