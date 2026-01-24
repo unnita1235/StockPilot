@@ -14,6 +14,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
+        "test:unit": "jest --testPathIgnorePatterns='__tests__/(e2e|integration)/'",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prepare": "husky"
