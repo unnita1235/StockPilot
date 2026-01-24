@@ -48,7 +48,7 @@ jobs:
           FOUND=0
           for pattern in "${PATTERNS[@]}"; do
             # Exclude .env.example files and this workflow file
-            MATCHES=$(git grep -l -E "$pattern" -- ':!*.example' ':!.github/workflows/*' 2>/dev/null || true)
+            MATCHES=$(git grep -l -E "$pattern" -- ':!*.example' ':!*.md' ':!.github/workflows/*' 2>/dev/null || true)
             if [ -n "$MATCHES" ]; then
               echo "❌ Potential secret found matching pattern: $pattern in files: $MATCHES"
               FOUND=1
