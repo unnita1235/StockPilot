@@ -17,8 +17,9 @@ describe('HealthController', () => {
     });
 
     it('should return health status', () => {
-        const result = controller.healthCheck();
+        const result = controller.check();
         expect(result.status).toBe('ok');
-        expect(result.uptime).toBeDefined();
+        expect(result.service).toBe('StockPilot Backend');
+        expect(result.database).toBe('connected');
     });
 });

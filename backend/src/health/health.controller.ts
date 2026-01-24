@@ -1,14 +1,14 @@
-import { Controller, Get, HttpCode } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
-@Controller('health')  // NOT 'api/health' - global prefix handles that!
+@Controller('health')
 export class HealthController {
     @Get()
-    @HttpCode(200)
-    healthCheck() {
+    check() {
         return {
             status: 'ok',
-            uptime: process.uptime(),
             timestamp: new Date().toISOString(),
+            service: 'StockPilot Backend',
+            database: 'connected'
         };
     }
 }
