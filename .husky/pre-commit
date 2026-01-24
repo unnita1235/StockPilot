@@ -1,45 +1,41 @@
+#!/bin/sh
 # Secret scanning pre-commit hook
 # Prevents accidental commit of secrets
 
-echo "🔍 Scanning for secrets..."
-
-# Define patterns that should NEVER be committed
-SECRET_PATTERNS=(
-  "mongodb\+srv://[^:]+:[^@]+@"
-  "JWT_SECRET=.{20,}"
-  "API_KEY=.{20,}"
-  "password.*=.*['\"][^'\"]{8,}"
-  "NEXTAUTH_SECRET=.{20,}"
-)
+echo "Scanning for secrets..."
 
 # Get staged files
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
 if [ -z "$STAGED_FILES" ]; then
-  echo "✅ No staged files to check"
+  echo "No staged files to check"
   exit 0
 fi
 
 FOUND_SECRETS=0
 
-for pattern in "${SECRET_PATTERNS[@]}"; do
-  # Search staged files for secret patterns (excluding .env.example)
-  MATCHES=$(echo "$STAGED_FILES" | grep -v "\.env\.example$" | xargs grep -l -E "$pattern" 2>/dev/null || true)
-  
+# Check each pattern individually (POSIX-compatible, no bash arrays)
+for pattern in \
+  'mongodb\+srv://[^:]+:[^@]+@' \
+  'JWT_SECRET=.{20,}' \
+  'API_KEY=.{20,}' \
+  'password.*=.*['"'"'"][^'"'"'"]{8,}' \
+  'NEXTAUTH_SECRET=.{20,}'; do
+  MATCHES=$(echo "$STAGED_FILES" | grep -v '\.env\.example$' | xargs grep -l -E "$pattern" 2>/dev/null || true)
   if [ -n "$MATCHES" ]; then
-    echo "❌ Potential secret found matching pattern: $pattern"
-    echo "   In files: $MATCHES"
+    echo "Potential secret found matching pattern: $pattern"
+    echo "  In files: $MATCHES"
     FOUND_SECRETS=1
   fi
 done
 
 if [ $FOUND_SECRETS -eq 1 ]; then
   echo ""
-  echo "🚫 COMMIT BLOCKED: Potential secrets detected!"
-  echo "   Please remove secrets before committing."
-  echo "   If this is a false positive, use: git commit --no-verify"
+  echo "COMMIT BLOCKED: Potential secrets detected!"
+  echo "  Please remove secrets before committing."
+  echo "  If this is a false positive, use: git commit --no-verify"
   exit 1
 fi
 
-echo "✅ No secrets detected"
+echo "No secrets detected"
 exit 0

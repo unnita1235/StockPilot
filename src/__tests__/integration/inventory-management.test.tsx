@@ -153,7 +153,7 @@ function InventoryPage() {
       {/* Delete Confirmation */}
       {deleteItem && (
         <div data-testid="delete-dialog">
-          <p>Delete "{deleteItem.name}"?</p>
+          <p>{`Delete "${deleteItem.name}"?`}</p>
           <button onClick={() => handleDeleteItem(deleteItem)} data-testid="confirm-delete">
             Confirm
           </button>
