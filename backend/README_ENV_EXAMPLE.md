@@ -10,7 +10,7 @@ These variables **must** be set. The application will exit with an error if they
 
 | Variable       | Description                          | Example                                                                 |
 |----------------|--------------------------------------|-------------------------------------------------------------------------|
-| `MONGODB_URI`  | MongoDB connection string            | `mongodb+srv://user:pass@cluster.mongodb.net/stockpilot?retryWrites=true&w=majority` |
+| `MONGODB_URI`  | MongoDB connection string            | `mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net/stockpilot?retryWrites=true&w=majority` |
 | `JWT_SECRET`   | Secret key for JWT token signing     | `your_secure_random_string_min_32_chars`                               |
 
 ### Generating a JWT Secret
