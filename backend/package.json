@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
-    "start": "node dist/main.js",
+    "start": "node dist/src/main.js",
     "start:nest": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -33,7 +33,7 @@
     "@nestjs/platform-socket.io": "^10.4.22",
     "@nestjs/schedule": "^4.0.0",
     "@nestjs/serve-static": "^4.0.0",
-        "@nestjs/swagger": "^7.4.2",
+    "@nestjs/swagger": "^7.4.2",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^10.4.22",
     "axios": "^1.13.2",

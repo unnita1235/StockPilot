@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+// import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   try {
@@ -73,14 +73,14 @@ async function bootstrap() {
     app.setGlobalPrefix('api');
 
     // Setup Swagger/OpenAPI Documentation
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle('StockPilot API')
-      .setDescription('Inventory Management System')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup('api-docs', app, document);
+    // const swaggerConfig = new DocumentBuilder()
+    //   .setTitle('StockPilot API')
+    //   .setDescription('Inventory Management System')
+    //   .setVersion('1.0')
+    //   .addBearerAuth()
+    //   .build();
+    // const document = SwaggerModule.createDocument(app, swaggerConfig);
+    // SwaggerModule.setup('api-docs', app, document);
     console.log('📚 Swagger documentation available at: /api-docs');
 
     const port = process.env.PORT || 5000;
