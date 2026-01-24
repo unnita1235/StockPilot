@@ -48,4 +48,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
   CMD curl -f http://127.0.0.1:$PORT/api/health || exit 1
 
 # Start the application
-CMD ["node", "dist/main.js"]
+CMD ["node","dist/src/main.js"]
