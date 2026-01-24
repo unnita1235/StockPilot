@@ -1,6 +1,7 @@
 'use client';
 
 import { io, Socket } from 'socket.io-client';
+import { API_BASE_URL } from './config';
 
 // Build Socket.IO URL: use NEXT_PUBLIC_WS_URL or derive from API URL
 const getSocketUrl = (): string => {
@@ -12,9 +13,8 @@ const getSocketUrl = (): string => {
         return process.env.NEXT_PUBLIC_WS_URL;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
     // Remove /api suffix to get base URL
-    return apiUrl.replace('/api', '');
+    return API_BASE_URL.replace('/api', '');
 };
 
 // Socket configuration

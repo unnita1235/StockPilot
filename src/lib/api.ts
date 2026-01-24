@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+import { API_BASE_URL } from './config';
+
+const API_URL = API_BASE_URL;
+
 
 interface ApiErrorResponse {
   error?: string;
