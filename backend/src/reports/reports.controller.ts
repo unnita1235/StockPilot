@@ -5,15 +5,16 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-@Controller('api/reports')
+@Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ReportsController {
     constructor(private readonly reportsService: ReportsService) {}
 
     @Get('inventory')
-    @Roles('admin', 'manager')
+    @Roles('admin', 'manager', 'staff')
     async getInventoryReport(@Query() filter: ReportFilter) {
-        return this.reportsService.generateInventoryReport(filter);
+        const data = await this.reportsService.generateInventoryReport(filter);
+        return { success: true, data };
     }
 
     @Get('export/excel')

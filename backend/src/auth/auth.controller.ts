@@ -1,4 +1,4 @@
-import { Controller, Post, Put, Body, Get, Delete, Param, UseGuards, Request, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Put, Body, Get, Delete, Param, UseGuards, Request, Res, HttpStatus, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
@@ -48,15 +48,16 @@ export class AuthController {
     }
 
     @Post('logout')
+    @HttpCode(HttpStatus.OK)
     async logout(@Res() res: Response) {
         res.clearCookie('stockpilot_token');
-        return res.status(HttpStatus.OK).json({ message: 'Logged out' });
+        return res.status(HttpStatus.OK).json({ success: true, message: 'Logged out' });
     }
 
     @Get('me')
     @UseGuards(JwtAuthGuard)
     async getProfile(@Request() req) {
-        return { success: true, data: { user: req.user } };
+        return { success: true, data: req.user };
     }
 
     @Put('profile')
@@ -69,12 +70,13 @@ export class AuthController {
         const updatedUser = await this.authService.updateProfile(req.user._id || req.user.id, body);
         return res.status(HttpStatus.OK).json({
             success: true,
-            data: { user: updatedUser },
+            data: updatedUser,
             message: 'Profile updated successfully'
         });
     }
 
     @Post('forgot-password')
+    @HttpCode(HttpStatus.OK)
     async forgotPassword(@Body() body: ForgotPasswordDto) {
         const result = await this.authService.forgotPassword(body.email);
         return { success: true, ...result };

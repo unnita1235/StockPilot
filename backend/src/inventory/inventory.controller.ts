@@ -53,7 +53,8 @@ import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 
     @Get(':id/forecast')
     async getForecast(@Param('id') id: string) {
-        return this.inventoryService.getForecast(id);
+        const data = await this.inventoryService.getForecast(id);
+        return createResponse(data);
     }
 
     @Delete(':id')
