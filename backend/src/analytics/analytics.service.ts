@@ -49,6 +49,7 @@ export class AnalyticsService {
             categoryBreakdown,
             recentMovements: recentMovements.length,
             totalInventoryValue: items.reduce((sum, item) => sum + (item.quantity * (item.unitPrice || 0)), 0),
+                  totalValue: items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0), // Add for E2E tests
             weeklyActivity,
         };
     }
