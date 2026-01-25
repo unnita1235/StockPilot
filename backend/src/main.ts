@@ -69,9 +69,10 @@ async function bootstrap() {
       disableErrorMessages: process.env.NODE_ENV === 'production',
     }));
 
-    // Set global prefix for API routes
-    app.setGlobalPrefix('api');
-
+  // Set global prefix for API routes
+    app.setGlobalPrefix('api', {
+        exclude: ['/health'],
+          });
     // Setup Swagger/OpenAPI Documentation
     // const swaggerConfig = new DocumentBuilder()
     //   .setTitle('StockPilot API')
@@ -97,6 +98,5 @@ async function bootstrap() {
   } catch (error) {
     console.error('Failed to start application:', error);
     process.exit(1);
-  }
-}
+  
 bootstrap();
