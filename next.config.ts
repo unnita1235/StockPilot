@@ -38,3 +38,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Force rebuild to pick up updated NEXT_PUBLIC_API_URL env variable
