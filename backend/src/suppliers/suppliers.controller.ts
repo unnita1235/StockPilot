@@ -36,7 +36,7 @@ export class SuppliersController {
     }
 
     @Post()
-    @Roles(UserRole.ADMIN, UserRole.MANAGER)
+    @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.STAFF)
     async create(@Body() dto: any) {
         const supplier = await this.suppliersService.create(dto);
         return createResponse(supplier, 'Supplier created successfully');

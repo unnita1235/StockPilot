@@ -45,11 +45,12 @@ export class AnalyticsService {
         return {
             totalItems,
             lowStockItems,
+            lowStockCount: lowStockItems,
             lowStockPercentage,
             categoryBreakdown,
             recentMovements: recentMovements.length,
             totalInventoryValue: items.reduce((sum, item) => sum + (item.quantity * (item.unitPrice || 0)), 0),
-                  totalValue: items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0), // Add for E2E tests
+            totalValue: items.reduce((sum, item) => sum + (item.quantity * (item.unitPrice || 0)), 0),
             weeklyActivity,
         };
     }
@@ -98,6 +99,7 @@ export class AnalyticsService {
         const alerts = lowStockItems.map(item => ({
             id: item._id.toString(),
             type: item.quantity === 0 ? 'critical' : 'warning',
+            severity: item.quantity === 0 ? 'critical' : 'warning',
             message: `${item.name} is ${item.quantity === 0 ? 'out of stock' : 'low on stock'} (${item.quantity} remaining)`,
             itemId: item._id.toString(),
             createdAt: new Date(),

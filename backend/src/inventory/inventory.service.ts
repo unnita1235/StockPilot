@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Inventory, InventoryDocument } from './inventory.schema';
@@ -29,6 +29,9 @@ export class InventoryService {
     }
 
     async findOne(id: string, tenantId?: string | Types.ObjectId): Promise<InventoryDocument> {
+        if (!id || !Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid ID format');
+        }
         const filter: any = { _id: id };
         if (tenantId) filter.tenantId = tenantId;
 
@@ -77,6 +80,9 @@ export class InventoryService {
     }
 
     async update(id: string, dto: Partial<Inventory>, tenantId?: string | Types.ObjectId): Promise<InventoryDocument> {
+        if (!id || !Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid ID format');
+        }
         const filter: any = { _id: id };
         if (tenantId) filter.tenantId = tenantId;
 
@@ -111,7 +117,10 @@ export class InventoryService {
         inventoryId: string,
         dto: CreateStockMovementDto,
         tenantId?: string | Types.ObjectId
-    ): Promise<StockMovementDocument> {
+    ): Promise<{ movement: StockMovementDocument; item: InventoryDocument }> {
+        if (!inventoryId || !Types.ObjectId.isValid(inventoryId)) {
+            throw new BadRequestException('Invalid ID format');
+        }
         const item = await this.findOne(inventoryId, tenantId);
 
         let quantityChange = dto.quantity;
@@ -140,14 +149,19 @@ export class InventoryService {
         await movement.save();
 
         // Update inventory quantity atomically
-        await this.inventoryModel.findByIdAndUpdate(inventoryId, {
-            $inc: { quantity: quantityChange }
-        });
+        const updatedItem = await this.inventoryModel.findByIdAndUpdate(
+            inventoryId,
+            { $inc: { quantity: quantityChange } },
+            { new: true }
+        );
 
-        return movement;
+        return { movement, item: updatedItem };
     }
 
     async remove(id: string, tenantId?: string | Types.ObjectId): Promise<void> {
+        if (!id || !Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid ID format');
+        }
         const filter: any = { _id: id };
         if (tenantId) filter.tenantId = tenantId;
 
@@ -178,6 +192,9 @@ export class InventoryService {
     }
 
     async getForecast(inventoryId: string): Promise<ForecastResultDto> {
+        if (!inventoryId || !Types.ObjectId.isValid(inventoryId)) {
+            throw new BadRequestException('Invalid ID format');
+        }
         const item = await this.inventoryModel.findById(inventoryId).exec();
         if (!item) {
             throw new NotFoundException('Inventory item not found');

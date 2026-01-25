@@ -42,12 +42,13 @@ export class StockController {
     @Put('quick-update/:id')
     async quickUpdate(
         @Param('id') id: string,
-        @Body() body: { stock: number },
+        @Body() body: { stock?: number; quantity?: number },
         @Req() req: any
     ) {
         const userId = req.user?._id?.toString() || req.user?.id;
         const tenantId = req.tenant?._id?.toString();
-        const updated = await this.stockService.quickUpdate(id, body.stock, userId, tenantId);
+        const newStock = body.quantity ?? body.stock;
+        const updated = await this.stockService.quickUpdate(id, newStock, userId, tenantId);
         return createResponse(updated, 'Stock updated');
     }
 }

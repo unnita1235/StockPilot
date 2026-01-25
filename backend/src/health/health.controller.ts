@@ -6,6 +6,7 @@ export class HealthController {
     check() {
         return {
             status: 'ok',
+            uptime: Math.floor(process.uptime()),
             timestamp: new Date().toISOString(),
             service: 'StockPilot Backend',
             database: 'connected'
